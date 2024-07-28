@@ -1,0 +1,17 @@
+{
+    "name": "Rendering",
+    "rootNamespace": "Core.Rendering",
+    "references": [
+        "Octree",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
