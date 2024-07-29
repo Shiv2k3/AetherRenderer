@@ -1,3 +1,4 @@
+using Unity.Burst;
 using Unity.Mathematics;
 
 namespace Core.Util

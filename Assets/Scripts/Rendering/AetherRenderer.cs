@@ -1,7 +1,6 @@
 using Core.Octree;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
@@ -14,10 +13,19 @@ namespace Core.Rendering
         [SerializeField] private WorldDiscriptor worldParameters;
         private SparseOctree octree;
 
+        [ContextMenu("Create+Execute")]
+        private void Awake()
+        {
+            Debug.Log(Time.renderedFrameCount);
+            CreateOctree();
+            Execute();
+            Debug.Log(Time.renderedFrameCount);
+        }
 
         [ContextMenu("Create")]
         void CreateOctree()
         {
+            JobsUtility.JobWorkerCount = Environment.ProcessorCount - 1;
             octree = new(worldParameters);
         }
 
@@ -26,7 +34,9 @@ namespace Core.Rendering
         {
             System.Diagnostics.Stopwatch t = new();
             t.Start();
+
             octree.Schedule(8, 1).Complete();
+
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
         }

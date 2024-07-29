@@ -315,7 +315,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 2147483647
+  m_StaticEditorFlags: 0
   m_IsActive: 1
 --- !u!114 &1632227327
 MonoBehaviour:
@@ -334,7 +334,7 @@ MonoBehaviour:
     rootLength: 10000
     sphereRadius: 4000
   debugNodes: 0
-  debugParents: 1
+  debugParents: 0
   nodeScale: 1
   randomOffset: 0
   visibleLayers:
@@ -356,13 +356,13 @@ MonoBehaviour:
   - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.14297791, g: 0.5943396, b: 0.17133567, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.22414559, g: 0.51560867, b: 0.6509434, a: 1}
   - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.61742145, g: 0.1768868, b: 0.7075472, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.21404415, g: 0.6981132, b: 0.4503686, a: 1}
   - DrawBounds: 0

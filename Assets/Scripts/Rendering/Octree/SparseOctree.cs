@@ -19,7 +19,7 @@ namespace Core.Octree
         public SparseOctree(in WorldDiscriptor worldDiscriptor)
         {
             root = new(0,0);
-            ChildrenPool.Data = new ChildrenPool(childrenPerThread: 10000);
+            ChildrenPool.Data = new ChildrenPool(7000);
             World.Data = worldDiscriptor;
             
             root.Divide(255);
@@ -44,7 +44,7 @@ namespace Core.Octree
         {
             if (node.Depth >= World.Data.maxDepth) return;
 
-            // Check which of the future child nodes have surface
+            // Check which of the possible child nodes intersect a surface
             byte active = 0;
             int octantDepth = node.Depth + 1;
             for (int i = 0; i < 8; i++)
@@ -55,6 +55,7 @@ namespace Core.Octree
             }
             if (active == 0) return;
 
+            // Divide to have the surface-intersecting children
             node.Divide(active);
             Children children = node.Children;
             for (int i = 0; i < children.Count; i++)

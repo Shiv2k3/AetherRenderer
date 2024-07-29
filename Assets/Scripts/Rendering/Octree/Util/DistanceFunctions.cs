@@ -1,8 +1,11 @@
-﻿using Unity.Mathematics;
+﻿using Unity.Burst;
+using Unity.Mathematics;
 using static Unity.Mathematics.math;
 
 namespace Core.Util
 {
+    [BurstCompile(OptimizeFor = OptimizeFor.Performance, FloatPrecision = FloatPrecision.Low, FloatMode = FloatMode.Fast)]
+
     public class SDFs
     {
         public static float SDLine(float3 p, float3 a, float3 b, float radius)
