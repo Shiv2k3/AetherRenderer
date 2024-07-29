@@ -330,7 +330,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldParameters:
-    maxDepth: 9
+    maxDepth: 8
     rootLength: 10000
     sphereRadius: 4000
   debugNodes: 0
@@ -338,28 +338,28 @@ MonoBehaviour:
   nodeScale: 1
   randomOffset: 0
   visibleLayers:
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0.52006483, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0.9940315, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.7075472, g: 0.6212916, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.6784314, g: 0.40428203, b: 0.3882353, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.14297791, g: 0.5943396, b: 0.17133567, a: 1}
   - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.22414559, g: 0.51560867, b: 0.6509434, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.61742145, g: 0.1768868, b: 0.7075472, a: 1}
   - DrawBounds: 0

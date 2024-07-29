@@ -52,7 +52,7 @@ namespace Core.Octree
                     if (sizeSeg.Length != childrenPerThread) throw new("Incorrect size segment length");
                     foreach (var children in sizeSeg)
                     {
-                        if (children.Thread != t || children.Nodes.Length != size || children.IsEmpty == false)
+                        if (children.Thread != t || children.Count != size || children.IsEmpty == false)
                             throw new("Error: Children were not created properly");
                     }
                     size++;
@@ -76,7 +76,7 @@ namespace Core.Octree
         public void Release(in Children children)
         {
             children.Reset();
-            _thread_size_children[children.Thread][children.Nodes.Length - 1].AsParallelWriter().AddNoResize(children);
+            _thread_size_children[children.Thread][children.Count - 1].AsParallelWriter().AddNoResize(children);
         }
 
         public void Dispose()

@@ -57,7 +57,7 @@ namespace Core.Octree
 
             node.Divide(active);
             Children children = node.Children;
-            for (int i = 0; i < children.Nodes.Length; i++)
+            for (int i = 0; i < children.Count; i++)
             {
                 Node child = children.Nodes[i];
                 Subdivide(ref child);
@@ -104,7 +104,7 @@ namespace Core.Octree
 
                 if (!node.IsLeaf)
                 {
-                    for (int i = 0; i < node.Children.Nodes.Length; i++)
+                    for (int i = 0; i < node.Children.Count; i++)
                     {
                         ReleaseChildren(node.Children.Nodes[i], ref disposeCount);
                     }
