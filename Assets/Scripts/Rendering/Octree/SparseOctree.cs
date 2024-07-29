@@ -19,7 +19,7 @@ namespace Core.Octree
         public SparseOctree(in WorldDiscriptor worldDiscriptor)
         {
             root = new(0,0);
-            ChildrenPool.Data = new ChildrenPool(childrenPerSize: 10000);
+            ChildrenPool.Data = new ChildrenPool(childrenPerThread: 10000);
             World.Data = worldDiscriptor;
             
             root.Divide(255);
@@ -28,8 +28,12 @@ namespace Core.Octree
 
         public void Execute(int index)
         {
+            // Get the current thread's octant
+            Node octant = octants.Nodes[index];
             // Subdivide the octant
-            Subdivide(ref octants[index]);
+            Subdivide(ref octant);
+            // Set the octant on the root
+            octants.Nodes[index] = octant;
         }
 
         /// <summary>
@@ -52,10 +56,14 @@ namespace Core.Octree
             if (active == 0) return;
 
             node.Divide(active);
-            for (int i = 0; i < node.Children.Count; i++)
+            Children children = node.Children;
+            for (int i = 0; i < children.Nodes.Length; i++)
             {
-                Subdivide(ref node.Children[i]);
+                Node child = children.Nodes[i];
+                Subdivide(ref child);
+                children.Nodes[i] = child;
             }
+            node.Children = children;
 
             static bool NodeHasSurface(in float3 position, in int depth)
             {
@@ -96,9 +104,9 @@ namespace Core.Octree
 
                 if (!node.IsLeaf)
                 {
-                    for (int i = 0; i < node.Children.Count; i++)
+                    for (int i = 0; i < node.Children.Nodes.Length; i++)
                     {
-                        ReleaseChildren(node.Children[i], ref disposeCount);
+                        ReleaseChildren(node.Children.Nodes[i], ref disposeCount);
                     }
                 }
 
