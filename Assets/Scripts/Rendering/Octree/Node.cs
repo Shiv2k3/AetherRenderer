@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
@@ -75,7 +74,6 @@ namespace Core.Octree
         {
             int totalNodes = math.countbits((int)activeOctants);
             _children = SparseOctree.ChildrenPool.Data.Get(totalNodes);
-            var nodes = _children.Nodes;
             int octantDepth = _depth + 1;
             for (int i = 0, index = 0; i < 8; i++)
             {
@@ -83,11 +81,10 @@ namespace Core.Octree
                 if ((activeOctants & bit) == bit)
                 {
                     var position = SparseOctree.OctantPosition(i, octantDepth, _position);
-                    nodes[index] = new(position, octantDepth);
+                    _children[index] = new(position, octantDepth);
                     index++;
                 }
             }
-            _children.Nodes = nodes;
             _children.IsEmpty = false;
         }
 

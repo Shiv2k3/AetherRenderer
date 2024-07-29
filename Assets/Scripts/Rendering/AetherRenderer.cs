@@ -1,9 +1,10 @@
 using Core.Octree;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.Jobs;
+using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 namespace Core.Rendering
@@ -12,6 +13,7 @@ namespace Core.Rendering
     {
         [SerializeField] private WorldDiscriptor worldParameters;
         private SparseOctree octree;
+
 
         [ContextMenu("Create")]
         void CreateOctree()
@@ -22,7 +24,11 @@ namespace Core.Rendering
         [ContextMenu("Execute")]
         void Execute()
         {
+            System.Diagnostics.Stopwatch t = new();
+            t.Start();
             octree.Schedule(8, 1).Complete();
+            t.Stop();
+            Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
         }
 
         [ContextMenu("Dispose")]
@@ -86,9 +92,9 @@ namespace Core.Rendering
 
                 if (!node.IsLeaf)
                 {
-                    foreach (Node n in node.Children.Nodes)
+                    for (int i = 0; i < node.Children.Count; i++)
                     {
-                        DrawNode(n);
+                        DrawNode(node.Children[i]);
                     }
                 }
             }

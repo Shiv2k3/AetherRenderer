@@ -28,12 +28,8 @@ namespace Core.Octree
 
         public void Execute(int index)
         {
-            // Get the current thread's octant
-            Node octant = octants.Nodes[index];
             // Subdivide the octant
-            Subdivide(ref octant);
-            // Set the octant on the root
-            octants.Nodes[index] = octant;
+            Subdivide(ref octants[index]);
         }
 
         /// <summary>
@@ -56,14 +52,10 @@ namespace Core.Octree
             if (active == 0) return;
 
             node.Divide(active);
-            Children children = node.Children;
-            for (int i = 0; i < children.Nodes.Length; i++)
+            for (int i = 0; i < node.Children.Count; i++)
             {
-                Node child = children.Nodes[i];
-                Subdivide(ref child);
-                children.Nodes[i] = child;
+                Subdivide(ref node.Children[i]);
             }
-            node.Children = children;
 
             static bool NodeHasSurface(in float3 position, in int depth)
             {
@@ -104,9 +96,9 @@ namespace Core.Octree
 
                 if (!node.IsLeaf)
                 {
-                    for (int i = 0; i < node.Children.Nodes.Length; i++)
+                    for (int i = 0; i < node.Children.Count; i++)
                     {
-                        ReleaseChildren(node.Children.Nodes[i], ref disposeCount);
+                        ReleaseChildren(node.Children[i], ref disposeCount);
                     }
                 }
 

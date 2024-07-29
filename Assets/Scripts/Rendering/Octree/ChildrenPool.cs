@@ -8,7 +8,6 @@ namespace Core.Octree
     {
         private NativeArray<Node> _nodePool;
         private UnsafeList<UnsafeList<UnsafeList<Children>>> _thread_size_children;
-
         public ChildrenPool(int childrenPerSize)
         {
             _nodePool = new(childrenPerSize * 36 * JobsUtility.ThreadIndexCount, Allocator.Persistent);
@@ -52,7 +51,7 @@ namespace Core.Octree
                     if (sizeSeg.Length != childrenPerSize) throw new("Incorrect size segment length");
                     foreach (var children in sizeSeg)
                     {
-                        if (children.Thread != t || children.Nodes.Length != size || children.IsEmpty == false)
+                        if (children.Thread != t || children.Count != size || children.IsEmpty == false)
                             throw new("Error: Children were not created properly");
                     }
                     size++;
@@ -67,6 +66,9 @@ namespace Core.Octree
             var threadSeg = _thread_size_children[JobsUtility.ThreadIndex];
             var sizeSeg = threadSeg[nodeCount - 1];
             int lastChildren = sizeSeg.Length - 1;
+#if UNITY_EDITOR
+            if (lastChildren == -1) throw new($"Out of Children @ thread {JobsUtility.ThreadIndex} @ size {nodeCount}");
+#endif
             var children = sizeSeg[lastChildren];
             sizeSeg.RemoveAtSwapBack(lastChildren);
             threadSeg[nodeCount - 1] = sizeSeg;
@@ -76,7 +78,7 @@ namespace Core.Octree
         public void Release(in Children children)
         {
             children.Reset();
-            _thread_size_children[children.Thread][children.Nodes.Length - 1].AsParallelWriter().AddNoResize(children);
+            _thread_size_children[children.Thread][children.Count - 1].AsParallelWriter().AddNoResize(children);
         }
 
         public void Dispose()
