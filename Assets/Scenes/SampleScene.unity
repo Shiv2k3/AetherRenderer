@@ -38,7 +38,6 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
-  m_IndirectSpecularColor: {r: 0.18028355, g: 0.22571374, b: 0.30692255, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -243,7 +242,7 @@ Camera:
   m_GameObject: {fileID: 963194225}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -316,7 +315,7 @@ GameObject:
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
+  m_StaticEditorFlags: 2147483647
   m_IsActive: 1
 --- !u!114 &1632227327
 MonoBehaviour:
@@ -331,13 +330,56 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldParameters:
-    maxDepth: 5
+    maxDepth: 8
     rootLength: 10000
-    sphereRadius: 4900
-  debugNodes: 1
+    sphereRadius: 4000
+  debugNodes: 0
+  debugParents: 1
   nodeScale: 1
   randomOffset: 0
-  visibleLayers: 000000010000
+  visibleLayers:
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 1, g: 0, b: 0, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 1, g: 0.52006483, b: 0, a: 0}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 1, g: 0.9940315, b: 0, a: 0}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.7075472, g: 0.6212916, b: 0, a: 0}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.6784314, g: 0.40428203, b: 0.3882353, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.14297791, g: 0.5943396, b: 0.17133567, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.22414559, g: 0.51560867, b: 0.6509434, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.61742145, g: 0.1768868, b: 0.7075472, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0.21404415, g: 0.6981132, b: 0.4503686, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0.16537122, g: 0.1512549, b: 0.9716981, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0, g: 1, b: 0.9489832, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 1, g: 0, b: 0.42620707, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0.5451994, g: 0, b: 1, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0, g: 1, b: 0.32636452, a: 1}
 --- !u!4 &1632227328
 Transform:
   m_ObjectHideFlags: 0

@@ -13,27 +13,27 @@ namespace Core.Octree
         [NativeDisableUnsafePtrRestriction, NativeDisableContainerSafetyRestriction] public Node root;
         [NativeDisableUnsafePtrRestriction, NativeDisableContainerSafetyRestriction] public Children octants;
 
-        internal readonly static SharedStatic<ChildrenPool> OctantPool = SharedStatic<ChildrenPool>.GetOrCreate<ChildrenPool, Node>();
+        internal readonly static SharedStatic<ChildrenPool> ChildrenPool = SharedStatic<ChildrenPool>.GetOrCreate<ChildrenPool, Node>();
         internal readonly static SharedStatic<WorldDiscriptor> World = SharedStatic<WorldDiscriptor>.GetOrCreate<WorldDiscriptor, SparseOctree>();
 
         public SparseOctree(in WorldDiscriptor worldDiscriptor)
         {
             root = new(0,0);
-            OctantPool.Data = new ChildrenPool(32768);
+            ChildrenPool.Data = new ChildrenPool(childrenPerSize: 10000);
             World.Data = worldDiscriptor;
             
-            root.Divide();
-            octants = root.Octants;
+            root.Divide(255);
+            octants = root.Children;
         }
 
         public void Execute(int index)
         {
             // Get the current thread's octant
-            Node octant = octants.nodes[index];
+            Node octant = octants.Nodes[index];
             // Subdivide the octant
             Subdivide(ref octant);
             // Set the octant on the root
-            octants.nodes[index] = octant;
+            octants.Nodes[index] = octant;
         }
 
         /// <summary>
@@ -44,21 +44,44 @@ namespace Core.Octree
         {
             if (node.Depth >= World.Data.maxDepth) return;
 
-            // Check if it has stuff
-            float distance = SDFs.SDSphere(node.Position, World.Data.sphereRadius, out _);
-            float octantLength = 1f / Mathf.Pow(2, node.Depth) * World.Data.rootLength;
-            float octantDiagonal = octantLength * math.sqrt(3);
-            if (math.abs(distance) > octantDiagonal * 0.5f) return;  
-
-            node.Divide();
-            Children octants = node.Octants;
+            // Check which of the future child nodes have surface
+            byte active = 0;
+            int octantDepth = node.Depth + 1;
             for (int i = 0; i < 8; i++)
             {
-                Node octant = octants.nodes[i];
-                Subdivide(ref octant);
-                octants.nodes[i] = octant;
+                float3 position = OctantPosition(i, octantDepth, node.Position);
+                if (NodeHasSurface(position, octantDepth))
+                    active |= (byte)(1 << i);
             }
-            node.Octants = octants;
+            if (active == 0) return;
+
+            node.Divide(active);
+            Children children = node.Children;
+            for (int i = 0; i < children.Nodes.Length; i++)
+            {
+                Node child = children.Nodes[i];
+                Subdivide(ref child);
+                children.Nodes[i] = child;
+            }
+            node.Children = children;
+
+            static bool NodeHasSurface(in float3 position, in int depth)
+            {
+                float distance = SDFs.SDSphere(position, World.Data.sphereRadius, out _);
+                return math.abs(distance) <= Table.OctantHalfDiagonal[depth] * World.Data.rootLength;
+            }
+        }
+
+        public static float3 OctantPosition(in int octantIndex, in int octantDepth, in float3 parentPosition)
+        {
+            float3 childPosition = Table.LocalOctantPosition[octantIndex];
+            childPosition *= Table.InvPowersOfTwo[octantDepth] * World.Data.rootLength;
+            childPosition += parentPosition;
+            return childPosition;
+        }
+        public static float OctantLength(in int octantDepth)
+        {
+            return Table.InvPowersOfTwo[octantDepth] * World.Data.rootLength;
         }
 
         public void Dispose()
@@ -72,7 +95,7 @@ namespace Core.Octree
             octants = Children.Empty;
             root = Node.Invalid;
 
-            OctantPool.Data.Dispose();
+            ChildrenPool.Data.Dispose();
             Debug.Log("Disposed node pool");
 
             static void ReleaseChildren(in Node node, ref int disposeCount)
@@ -81,9 +104,9 @@ namespace Core.Octree
 
                 if (!node.IsLeaf)
                 {
-                    for (int i = 0; i < 8; i++)
+                    for (int i = 0; i < node.Children.Nodes.Length; i++)
                     {
-                        ReleaseChildren(node.Octants.nodes[i], ref disposeCount);
+                        ReleaseChildren(node.Children.Nodes[i], ref disposeCount);
                     }
                 }
 

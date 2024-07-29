@@ -4,18 +4,24 @@ namespace Core.Octree
 {
     public struct Children
     {
-        public NativeArray<Node> nodes;
-        public int thread;
-        public int index;
+        public NativeArray<Node> Nodes;
+        public byte Thread { get; private set; }
+        public bool IsEmpty { get; set; }
 
-        public Children(in NativeArray<Node> nodes, int thread, int index)
+        public Children(in NativeArray<Node> nodes, byte thread)
         {
-            this.nodes = nodes;
-            this.thread = thread;
-            this.index = index;
+            Nodes = nodes;
+            Thread = thread;
+            IsEmpty = true;
         }
-
-        public static Children Empty => new() { thread = -1 };
-        public readonly bool IsEmpty => thread == -1;
+        public void Reset()
+        {
+            IsEmpty = true;
+            for (int i = 0; i < Nodes.Length; i++)
+            {
+                Nodes[i] = Node.Invalid;
+            }
+        }
+        public static Children Empty => new() { IsEmpty = true };
     }
 }

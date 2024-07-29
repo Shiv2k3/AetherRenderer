@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Mathematics;
 
@@ -6,7 +7,7 @@ namespace Core.Octree
 {
     public unsafe struct Node
     {
-        public static Node Invalid => new() { _depth = -1 };
+        public static Node Invalid => new() { _depth = -1, _position = math.NAN };
 
         public int Depth
         {
@@ -38,28 +39,28 @@ namespace Core.Octree
         }
         private float3 _position;
 
-        public Children Octants
+        public Children Children
         {
             readonly get
             {
                 ThrowIfDisposed();
-                return _octants;
+                return _children;
             }
             set
             {
                 ThrowIfDisposed();
-                _octants = value;
+                _children = value;
             }
         }
-        [NativeDisableContainerSafetyRestriction] private Children _octants;
+        [NativeDisableContainerSafetyRestriction] private Children _children;
 
-        public readonly bool IsLeaf => _octants.IsEmpty;
-        public readonly bool IsValid => _depth > -1;
+        public readonly bool IsLeaf => _children.IsEmpty;
+        public readonly bool IsValid => _depth > -1 && !math.any(_position == math.NAN);
 
         [Conditional("UNITY_EDITOR")]
         private readonly void ThrowIfDisposed()
         {
-            if (_depth == -1 || math.any(_position == math.NAN))
+            if (_depth < 0 || math.any(_position == math.NAN))
                 throw new("Cannot access disposed Node");
         }
 
@@ -67,22 +68,27 @@ namespace Core.Octree
         {
             _position = position;
             _depth = depth;
-            _octants = Children.Empty;
+            _children = Children.Empty;
         }
 
-        public void Divide()
+        public void Divide(byte activeOctants)
         {
-            _octants = SparseOctree.OctantPool.Data.Get();
-            var nodes = _octants.nodes;
+            int totalNodes = math.countbits((int)activeOctants);
+            _children = SparseOctree.ChildrenPool.Data.Get(totalNodes);
+            var nodes = _children.Nodes;
             int octantDepth = _depth + 1;
-            for (int i = 0; i < 8; i++)
+            for (int i = 0, index = 0; i < 8; i++)
             {
-                float3 childPosition = IndexPosition.CellPosition(i, 2);
-                childPosition *= 1f / math.pow(2, octantDepth) * SparseOctree.World.Data.rootLength;
-                childPosition += _position;
-                nodes[i] = new(childPosition, octantDepth);
+                int bit = 1 << i;
+                if ((activeOctants & bit) == bit)
+                {
+                    var position = SparseOctree.OctantPosition(i, octantDepth, _position);
+                    nodes[index] = new(position, octantDepth);
+                    index++;
+                }
             }
-            _octants.nodes = nodes;
+            _children.Nodes = nodes;
+            _children.IsEmpty = false;
         }
 
         public void Release()
@@ -90,10 +96,10 @@ namespace Core.Octree
             Position = math.NAN;
             Depth = -1;
 
-            if (!_octants.IsEmpty)
+            if (!_children.IsEmpty)
             {
-                SparseOctree.OctantPool.Data.Release(ref _octants);
-                _octants = Children.Empty;
+                SparseOctree.ChildrenPool.Data.Release(_children);
+                _children = Children.Empty;
             }
         }
     }
