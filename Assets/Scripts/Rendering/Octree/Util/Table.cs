@@ -1,11 +1,10 @@
-using Unity.Burst;
 using Unity.Mathematics;
 
 namespace Core.Util
 {
     public static class Table
     {
-        public static float SQRT3 = 1.73205080757f;
+        public static readonly float SQRT3 = 1.73205080757f;
 
         public static readonly float[] PowersOfTwo = new float[]
         {

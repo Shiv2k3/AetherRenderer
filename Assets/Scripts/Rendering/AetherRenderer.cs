@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 namespace Core.Rendering
@@ -13,20 +14,13 @@ namespace Core.Rendering
         [SerializeField] private WorldDiscriptor worldParameters;
         private SparseOctree octree;
 
-        [ContextMenu("Create+Execute")]
-        private void Awake()
-        {
-            Debug.Log(Time.renderedFrameCount);
-            CreateOctree();
-            Execute();
-            Debug.Log(Time.renderedFrameCount);
-        }
-
         [ContextMenu("Create")]
         void CreateOctree()
         {
             JobsUtility.JobWorkerCount = Environment.ProcessorCount - 1;
             octree = new(worldParameters);
+            lastPos = 0;
+            debugNodes = true;
         }
 
         [ContextMenu("Execute")]
@@ -35,10 +29,28 @@ namespace Core.Rendering
             System.Diagnostics.Stopwatch t = new();
             t.Start();
 
+            octree.Camera = Camera;
             octree.Schedule(8, 1).Complete();
 
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
+        }
+
+        [SerializeField] private float3 lastPos;
+        [SerializeField] private float updateCheckRadius;
+
+        private float3 Camera => UnityEngine.Camera.current.transform.position;
+
+        private void Awake() => CreateOctree();
+
+        private void Update()
+        {
+            float distance = math.distance(Camera, lastPos);
+            if (distance > updateCheckRadius)
+            {
+                lastPos = Camera;
+                Execute();
+            }
         }
 
         [ContextMenu("Dispose")]
@@ -98,6 +110,11 @@ namespace Core.Rendering
                     Gizmos.color = visibleLayers[node.Depth].color;
                     if (visibleLayers[node.Depth].DrawBounds) Gizmos.DrawWireCube(position, cubeSize);
                     if (visibleLayers[node.Depth].DrawCenter) Gizmos.DrawSphere(position, sphereRadius);
+
+                    float distToCam = math.distance(Camera, node.Position) / (worldParameters.rootLength / 2f) * worldParameters.maxDepth;
+                    //float nodeLOD = math.log2(SparseOctree.OctantLength(node.Depth) / SparseOctree.OctantLength(worldParameters.maxDepth)) * distToCam;
+                    float nodeLOD = math.clamp(distToCam, 0, worldParameters.maxDepth);
+                    Handles.Label(node.Position, $"{nodeLOD}");
                 }
 
                 if (!node.IsLeaf)

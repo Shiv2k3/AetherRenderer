@@ -12,6 +12,7 @@ namespace Core.Octree
     {
         [NativeDisableUnsafePtrRestriction, NativeDisableContainerSafetyRestriction] public Node root;
         [NativeDisableUnsafePtrRestriction, NativeDisableContainerSafetyRestriction] public Children octants;
+        public float3 Camera;
 
         internal readonly static SharedStatic<ChildrenPool> ChildrenPool = SharedStatic<ChildrenPool>.GetOrCreate<ChildrenPool, Node>();
         internal readonly static SharedStatic<WorldDiscriptor> World = SharedStatic<WorldDiscriptor>.GetOrCreate<WorldDiscriptor, SparseOctree>();
@@ -24,6 +25,7 @@ namespace Core.Octree
             
             root.Divide(255);
             octants = root.Children;
+            Camera = 0;
         }
 
         public void Execute(int index)
@@ -42,7 +44,20 @@ namespace Core.Octree
         /// <param name="node">The node to divide, should not be previously divided</param>
         private readonly void Subdivide(ref Node node)
         {
-            if (node.Depth >= World.Data.maxDepth) return;
+            float distToCam = math.distance(Camera, node.Position) / (World.Data.rootLength / 2f) * World.Data.maxDepth;
+            //float nodeLOD = math.log2(OctantLength(node.Depth) / OctantLength(World.Data.maxDepth)) * distToCam;
+            float nodeLOD = math.clamp(distToCam, 0, World.Data.maxDepth);
+            if (node.Depth >= World.Data.maxDepth - (int)nodeLOD)
+            {
+                // If node has children, they must be released
+                if (!node.Children.IsEmpty)
+                {
+                    node.Children.Release();
+                    node.Children = Children.Empty;
+                }
+
+                return;
+            }
 
             // Check which of the possible child nodes intersect a surface
             byte active = 0;

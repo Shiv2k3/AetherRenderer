@@ -76,7 +76,7 @@ namespace Core.Octree
         }
         public void Release(in Children children)
         {
-            children.Reset();
+            children.Release();
             _thread_size_children[children.Thread][children.Count - 1].AsParallelWriter().AddNoResize(children);
         }
 

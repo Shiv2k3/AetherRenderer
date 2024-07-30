@@ -24,7 +24,7 @@ namespace Core.Octree
             if (Count != nodes.Length) throw new($"Expected Count value {nodes.Length}, got {Count}");
             if (Thread != thread) throw new($"Expected thread value {thread}, got {Thread}");
         }
-        public void Reset()
+        public void Release()
         {
             IsEmpty = true;
             for (int i = 0; i < Count; i++)
