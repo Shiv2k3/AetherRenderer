@@ -1,14 +1,13 @@
-﻿using System;
-using Unity.Collections;
-using Unity.Collections.LowLevel.Unsafe;
+﻿using Unity.Collections;
 using Unity.Jobs.LowLevel.Unsafe;
+using UnityEngine;
 
 namespace Core.Octree
 {
     internal struct ChildrenPool
     {
         private NativeArray<Node> _nodePool;
-        private UnsafeList<UnsafeList<UnsafeList<Children>>> _thread_size_children;
+        public NativeArray<NativeArray<NativeList<Children>>> _thread_size_children;
 
         public ChildrenPool(int childrenPerThread)
         {
@@ -20,10 +19,10 @@ namespace Core.Octree
             // Each sizeSegment has a childrenPerSize elements, every children has the same number of nodes
             for (int thread = 0, poolIndex = 0; thread < JobsUtility.ThreadIndexCount; thread++)
             {
-                UnsafeList<UnsafeList<Children>> threadSegment = new(8, Allocator.Persistent);
+                NativeArray<NativeList<Children>> threadSegment = new(8, Allocator.Persistent);
                 for (int size = 1; size <= 8; size++)
                 {
-                    UnsafeList<Children> sizeSegment = new(childrenPerThread, Allocator.Persistent);
+                    NativeList<Children> sizeSegment = new(childrenPerThread, Allocator.Persistent);
                     for (int child = 0; child < childrenPerThread; child++, poolIndex += size)
                     {
                         var nodes = _nodePool.GetSubArray(poolIndex, size);
@@ -35,12 +34,10 @@ namespace Core.Octree
                         sizeSegment.AddNoResize(c);
                     }
                     sizeSegment.TrimExcess();
-                    threadSegment.AddNoResize(sizeSegment);
+                    threadSegment[size - 1] = sizeSegment;
                 }
-                threadSegment.TrimExcess();
-                _thread_size_children.AddNoResize(threadSegment);
+                _thread_size_children[thread] = threadSegment;
             }
-            _thread_size_children.TrimExcess();
 
 #if UNITY_EDITOR
             int t = 0;
@@ -68,16 +65,34 @@ namespace Core.Octree
             var threadSeg = _thread_size_children[JobsUtility.ThreadIndex];
             var sizeSeg = threadSeg[nodeCount - 1];
             int lastChildren = sizeSeg.Length - 1;
-            var children = sizeSeg[lastChildren];
-            sizeSeg.RemoveAtSwapBack(lastChildren);
-            threadSeg[nodeCount - 1] = sizeSeg;
-            _thread_size_children[JobsUtility.ThreadIndex] = threadSeg;
-            return children;
+            if (lastChildren > -1)
+            {
+                var children = sizeSeg[lastChildren];
+                sizeSeg.RemoveAt(lastChildren);
+                threadSeg[nodeCount - 1] = sizeSeg;
+                _thread_size_children[JobsUtility.ThreadIndex] = threadSeg;
+                return children;
+            }
+
+            throw new($"Pool out of children, thread#{JobsUtility.ThreadIndex} count#{nodeCount}");
         }
-        public void Release(in Children children)
+        public unsafe void Release(ref Children children)
         {
-            children.Release();
-            _thread_size_children[children.Thread][children.Count - 1].AsParallelWriter().AddNoResize(children);
+            ReleaseChildren(ref children);
+            var threadSeg = _thread_size_children[children.Thread];
+            var sizeSeg = threadSeg[children.Count - 1];
+
+            sizeSeg.AddNoResize(children);
+            static void ReleaseChildren(ref Children children)
+            {
+                children.IsEmpty = true;
+                for (int i = 0; i < children.Count; i++)
+                {
+                    if (!children.Nodes[i].IsValid) continue;
+                    children[i].ReleaseNode();
+                    children[i] = Node.Invalid;
+                }
+            }
         }
 
         public void Dispose()

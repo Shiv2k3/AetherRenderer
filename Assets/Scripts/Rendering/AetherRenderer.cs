@@ -39,7 +39,17 @@ namespace Core.Rendering
         [SerializeField] private float3 lastPos;
         [SerializeField] private float updateCheckRadius;
 
-        private float3 Camera => UnityEngine.Camera.current.transform.position;
+        private float3 Camera
+        {
+            get
+            {
+                try { return UnityEngine.Camera.current.transform.position; }
+                catch
+                {
+                    return 0;
+                }
+            }
+        }
 
         private void Awake() => CreateOctree();
 
@@ -53,6 +63,13 @@ namespace Core.Rendering
             }
         }
 
+        [ContextMenu("Release Root")]
+        void ReleaseRoot()
+        {
+            octree.root.ReleaseNode();
+            Debug.Log("Root Released");
+        }
+
         [ContextMenu("Dispose")]
         void Dispose()
         {
@@ -64,6 +81,7 @@ namespace Core.Rendering
 
         [SerializeField] private bool debugNodes = true;
         [SerializeField] private bool debugParents = true;
+        [SerializeField] private bool debugLOD = true;
         [SerializeField] private float nodeScale = 1;
         [SerializeField] private float randomOffset = 0f;
         [SerializeField] private List<DebugPram> visibleLayers = new(14);
@@ -78,19 +96,7 @@ namespace Core.Rendering
         }
         private unsafe void OnDrawGizmos()
         {
-            try
-            {
-                if (debugNodes)
-                {
-                    DrawNode(octree.root);
-                }
-            }
-            catch (Exception e)
-            {
-
-                debugNodes = false;
-                Debug.LogError("Gizmo Error: " + e);
-            }
+            if (debugNodes) DrawNode(octree.root);
 
             void DrawNode(in Node node)
             {
@@ -111,17 +117,28 @@ namespace Core.Rendering
                     if (visibleLayers[node.Depth].DrawBounds) Gizmos.DrawWireCube(position, cubeSize);
                     if (visibleLayers[node.Depth].DrawCenter) Gizmos.DrawSphere(position, sphereRadius);
 
-                    float distToCam = math.distance(Camera, node.Position) / (worldParameters.rootLength / 2f) * worldParameters.maxDepth;
-                    //float nodeLOD = math.log2(SparseOctree.OctantLength(node.Depth) / SparseOctree.OctantLength(worldParameters.maxDepth)) * distToCam;
-                    float nodeLOD = math.clamp(distToCam, 0, worldParameters.maxDepth);
-                    Handles.Label(node.Position, $"{nodeLOD}");
+                    if (debugLOD)
+                    {
+                        float distToCam = math.distance(Camera, node.Position) / (worldParameters.rootLength / 2f) * worldParameters.maxDepth;
+                        float nodeLOD = math.clamp(distToCam, 0, worldParameters.maxDepth);
+                        Handles.Label(node.Position, $"{nodeLOD}");
+                    }
                 }
 
                 if (!node.IsLeaf)
                 {
                     for (int i = 0; i < node.Children.Count; i++)
                     {
-                        DrawNode(node.Children[i]);
+                        try { DrawNode(node.Children[i]); }
+                        catch
+                        {
+                            float3 p = SparseOctree.OctantPosition(i, node.Depth + 1, node.Position);
+                            float3 s = SparseOctree.OctantLength(node.Depth + 1);
+
+                            Gizmos.color = Color.red;
+                            Gizmos.DrawCube(p, s);
+                        }
+
                     }
                 }
             }

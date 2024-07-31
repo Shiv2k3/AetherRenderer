@@ -6,7 +6,7 @@ namespace Core.Util
     {
         public static readonly float SQRT3 = 1.73205080757f;
 
-        public static readonly float[] PowersOfTwo = new float[]
+        public static readonly int[] PowersOfTwo = new int[]
         {
             1,    // Depth 0
             2,    // Depth 1

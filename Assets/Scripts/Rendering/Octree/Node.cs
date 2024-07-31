@@ -60,7 +60,7 @@ namespace Core.Octree
         private readonly void ThrowIfDisposed()
         {
             if (_depth < 0 || math.any(_position == math.NAN))
-                throw new("Cannot access disposed Node");
+                throw new($"Cannot access disposed Node");
         }
 
         public Node(in float3 position, in int depth)
@@ -88,14 +88,13 @@ namespace Core.Octree
             _children.IsEmpty = false;
         }
 
-        public void Release()
+        public void ReleaseNode()
         {
-            Position = math.NAN;
             Depth = -1;
-
+            Position = math.NAN;
             if (!_children.IsEmpty)
             {
-                SparseOctree.ChildrenPool.Data.Release(_children);
+                SparseOctree.ChildrenPool.Data.Release(ref _children);
                 _children = Children.Empty;
             }
         }
