@@ -17,17 +17,17 @@ namespace Core.Octree
         [NativeDisableUnsafePtrRestriction, NativeDisableContainerSafetyRestriction] public Children octants;
         public float3 Camera;
 
-        internal readonly static SharedStatic<ChildrenPool> ChildrenPool = SharedStatic<ChildrenPool>.GetOrCreate<ChildrenPool, Node>();
+        public readonly static SharedStatic<ChildrenPool> ChildrenPool = SharedStatic<ChildrenPool>.GetOrCreate<ChildrenPool, Node>();
         internal readonly static SharedStatic<WorldDiscriptor> World = SharedStatic<WorldDiscriptor>.GetOrCreate<WorldDiscriptor, SparseOctree>();
 
         [NativeDisableContainerSafetyRestriction] private NativeArray<NativeList<float3>> _thread_currentChildren;
 
         public SparseOctree(in WorldDiscriptor worldDiscriptor)
         {
-            root = new(0,0);
-            ChildrenPool.Data = new ChildrenPool(7000);
+            root = new(0, 0);
+            ChildrenPool.Data = new ChildrenPool(7_000);
             World.Data = worldDiscriptor;
-            
+
             _thread_currentChildren = new(JobsUtility.ThreadIndexCount, Allocator.Persistent);
             for (int i = 0; i < JobsUtility.ThreadIndexCount; i++)
             {
@@ -53,80 +53,79 @@ namespace Core.Octree
         /// Continuously divides given node until max depth is reached
         /// </summary>
         /// <param name="node">The node to divide, should not be previously divided</param>
-            private readonly void Subdivide(ref Node node)
+        private readonly void Subdivide(ref Node node)
+        {
+            // Get a list of the current children
+            var currentChildren = _thread_currentChildren[JobsUtility.ThreadIndex];
+            if (currentChildren.Length > 0) throw new("Previous use indicates not all children were found");
+            if (!node.IsLeaf)
             {
-                // Get a list of the current children
-                var currentChildren = _thread_currentChildren[JobsUtility.ThreadIndex];
+                for (int i = 0; i < node.Children.Count; i++)
+                {
+                    if (node.Children[i].IsValid)
+                        currentChildren.Add(node.Children[i].Position);
+                }
+            }
+
+            // Check which of the possible child nodes intersect a surface and is within render distance
+            byte active = 0;
+            byte prevActive = 0;
+            int octantDepth = node.Depth + 1;
+            for (int i = 0; i < 8; i++)
+            {
+                float3 position = OctantPosition(i, octantDepth, node.Position);
+
+                for (int c = 0; c < currentChildren.Length; c++)
+                {
+                    if (math.all(currentChildren[c] == position))
+                    {
+                        currentChildren.RemoveAt(c);
+                        prevActive |= (byte)(1 << i);
+                        break;
+                    }
+                }
+
+                bool inRange = octantDepth <= World.Data.maxDepth - (int)OctantLOD(position);
+                if (inRange && NodeHasSurface(position, octantDepth))
+                    active |= (byte)(1 << i);
+            }
+
+            if (active == 0)
+            {
                 if (!node.IsLeaf)
-                {
-                    for (int i = 0; i < node.Children.Count; i++)
-                    {
-                        if (node.Children[i].IsValid)
-                            currentChildren.Add(node.Children[i].Position);
-                    }
-                }
-
-                // Check which of the possible child nodes intersect a surface and is within render distance
-                byte active = 0;
-                byte prevActive = 0;
-                int octantDepth = node.Depth + 1;
-                for (int i = 0; i < 8; i++)
-                {
-                    float3 position = OctantPosition(i, octantDepth, node.Position);
-
-                    for (int c = 0; c < currentChildren.Length; c++)
-                    {
-                        if (math.all(currentChildren[c] == position))
-                        {
-                            currentChildren.RemoveAt(c);
-                            prevActive |= (byte)(1 << i);
-                            break;
-                        }
-                    }
-
-                    bool inRange = octantDepth <= World.Data.maxDepth - (int)OctantLOD(position);
-                    if (inRange && NodeHasSurface(position, octantDepth))
-                        active |= (byte)(1 << i);
-                }
-                if (currentChildren.Length > 0)
-                    throw new("All children not found");
-
-                if (active == 0)
-                {
-                    if (!node.IsLeaf)
-                    {
-                        var c = node.Children;
-                        ChildrenPool.Data.Release(ref c);
-                        node.Children = c;
-                    }
-
-                    return;
-                }
-
-                if (active != prevActive && !node.IsLeaf)
                 {
                     var c = node.Children;
                     ChildrenPool.Data.Release(ref c);
                     node.Children = c;
                 }
 
-                // Divide to have the surface-intersecting children
-                node.Divide(active);
-                Children children = node.Children;
-                for (int i = 0; i < children.Count; i++)
-                {
-                    Node child = children.Nodes[i];
-                    Subdivide(ref child);
-                    children.Nodes[i] = child;
-                }
-                node.Children = children;
-
-                static bool NodeHasSurface(in float3 position, in int depth)
-                {
-                    float distance = SDFs.SDSphere(position, World.Data.sphereRadius, out _);
-                    return math.abs(distance) <= Table.OctantHalfDiagonal[depth] * World.Data.rootLength;
-                }
+                return;
             }
+
+            if (active != prevActive && !node.IsLeaf)
+            {
+                var c = node.Children;
+                ChildrenPool.Data.Release(ref c);
+                node.Children = c;
+            }
+
+            // Divide to have the surface-intersecting children
+            node.Divide(active);
+            Children children = node.Children;
+            for (int i = 0; i < children.Count; i++)
+            {
+                Node child = children.Nodes[i];
+                Subdivide(ref child);
+                children.Nodes[i] = child;
+            }
+            node.Children = children;
+
+            static bool NodeHasSurface(in float3 position, in int depth)
+            {
+                float distance = SDFs.SDSphere(position, World.Data.sphereRadius, out _);
+                return math.abs(distance) <= Table.OctantHalfDiagonal[depth] * World.Data.rootLength;
+            }
+        }
 
         private readonly float OctantLOD(in float3 position)
         {

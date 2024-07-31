@@ -59,7 +59,7 @@ namespace Core.Octree
         [Conditional("UNITY_EDITOR")]
         private readonly void ThrowIfDisposed()
         {
-            if (_depth < 0 || math.any(_position == math.NAN))
+            if (!IsValid)
                 throw new($"Cannot access disposed Node");
         }
 
@@ -90,8 +90,8 @@ namespace Core.Octree
 
         public void ReleaseNode()
         {
-            Depth = -1;
-            Position = math.NAN;
+            _depth = -1;
+            _position = math.NAN;
             if (!_children.IsEmpty)
             {
                 SparseOctree.ChildrenPool.Data.Release(ref _children);

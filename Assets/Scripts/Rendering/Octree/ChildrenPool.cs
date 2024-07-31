@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Core.Octree
 {
-    internal struct ChildrenPool
+    public struct ChildrenPool
     {
         private NativeArray<Node> _nodePool;
         public NativeArray<NativeArray<NativeList<Children>>> _thread_size_children;
@@ -71,18 +71,24 @@ namespace Core.Octree
                 sizeSeg.RemoveAt(lastChildren);
                 threadSeg[nodeCount - 1] = sizeSeg;
                 _thread_size_children[JobsUtility.ThreadIndex] = threadSeg;
+
+                Debug.LogWarning($"1 children rented: [{children.Thread},{children.Count}] = {_thread_size_children[children.Thread][children.Count - 1].Length}");
+
                 return children;
             }
 
-            throw new($"Pool out of children, thread#{JobsUtility.ThreadIndex} count#{nodeCount}");
+            throw new($"Pool out of children, [{JobsUtility.ThreadIndex},{nodeCount}]");
         }
         public unsafe void Release(ref Children children)
         {
             ReleaseChildren(ref children);
+            int preCount = _thread_size_children[children.Thread][children.Count - 1].Length;
             var threadSeg = _thread_size_children[children.Thread];
             var sizeSeg = threadSeg[children.Count - 1];
-
             sizeSeg.AddNoResize(children);
+
+            Debug.LogWarning($"1 children released: [{children.Thread},{children.Count}] = {_thread_size_children[children.Thread][children.Count - 1].Length}");
+
             static void ReleaseChildren(ref Children children)
             {
                 children.IsEmpty = true;
