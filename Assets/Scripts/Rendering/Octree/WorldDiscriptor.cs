@@ -1,7 +1,7 @@
 ﻿using System;
 using UnityEngine;
 
-namespace Core.Octree
+namespace Core.Rendering.Octree
 {
     [Serializable]
     public struct WorldDiscriptor
