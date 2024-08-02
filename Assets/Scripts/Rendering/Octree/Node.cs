@@ -1,4 +1,6 @@
-﻿namespace Core.Rendering.Octree
+﻿using Unity.Mathematics;
+
+namespace Core.Rendering.Octree
 {
     public unsafe struct Node
     {
@@ -24,8 +26,21 @@
             _map = (byte)chunkIndex;
             _ptr = chunk;
         }
+        public void AssignSubnodes(in Node* start, in byte map)
+        {
+#if DEBUG
+            if (isChunkPTR) throw new("Node is already assigned to a chunk");
+#endif
+            _ptr = start;
+            _map = map;
+        }
+
+        public readonly bool IsLeaf => _map == 0;
+        public readonly int Count => Unity.Mathematics.math.countbits((int)_map);
+
         private void* _ptr;
-        private byte _map;
+        public byte _map;
+        public Voxel data;
 #if DEBUG
         private bool isChunkPTR;
 #endif

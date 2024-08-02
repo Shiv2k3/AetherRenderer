@@ -1,7 +1,7 @@
 ﻿using Unity.Mathematics;
 using static Unity.Mathematics.math;
 
-namespace Core.Octree
+namespace Core.Util
 {
     public struct IndexPosition
     {

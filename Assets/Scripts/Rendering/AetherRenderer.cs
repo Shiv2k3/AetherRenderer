@@ -1,27 +1,28 @@
-using Core.Octree;
+using Core.Rendering.Octree;
+using Core.Util;
+using Sirenix.OdinInspector;
 using System;
 using System.Collections.Generic;
-using System.Threading.Tasks;
 using Unity.Jobs;
-using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
-using UnityEditor;
 using UnityEngine;
 
 namespace Core.Rendering
 {
     public class AetherRenderer : MonoBehaviour
     {
-        [SerializeField] private WorldDiscriptor worldParameters;
+        [SerializeField] private Settings world;
         private SparseOctree octree;
+        private JobHandle octreeJob;
+        [SerializeField, ReadOnly] private bool Disposed;
 
         [ContextMenu("Create")]
         void CreateOctree()
         {
-            JobsUtility.JobWorkerCount = Environment.ProcessorCount - 1;
-            octree = new(worldParameters);
-            lastPos = 0;
-            debugNodes = true;
+            octree = new(world);
+            world.octreeCenter = 0;
+            draw = true;
+            Disposed = false;
         }
 
         [ContextMenu("Execute")]
@@ -30,20 +31,16 @@ namespace Core.Rendering
             System.Diagnostics.Stopwatch t = new();
             t.Start();
 
-            debugNodes = false;
-            octree.Camera = Camera;
-            var jh = octree.Schedule(8, 1);
-            jh.Complete();
-            debugNodes = true;
+            SparseOctree.Settings.Data = world;
+            octree.ResetPool();
+            octreeJob = octree.Schedule(8, 1);
+            octreeJob.Complete();
 
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
         }
 
-        [SerializeField] private float3 lastPos;
-        [SerializeField] private float updateCheckRadius;
-
-        private float3 Camera
+        private float3 CameraPosition
         {
             get
             {
@@ -59,19 +56,17 @@ namespace Core.Rendering
 
         private void Update()
         {
-            float distance = math.distance(Camera, lastPos);
-            if (distance > updateCheckRadius)
+            if (Disposed) return;
+
+            float distance = math.distance(CameraPosition, world.octreeCenter);
+            if (distance > world.updateThreshold)
             {
-                lastPos = Camera;
+                world.octreeCenter = CameraPosition;
                 Execute();
             }
-        }
-
-        [ContextMenu("Release Root")]
-        void ReleaseRoot()
-        {
-            octree.root.ReleaseNode();
-            Debug.Log("Root Released");
+#if DEBUG
+            world.nodesAvailable = octree.NodesAvailable();
+#endif
         }
 
         [ContextMenu("Dispose")]
@@ -79,16 +74,25 @@ namespace Core.Rendering
         {
             octree.Dispose();
             Debug.Log("Disposed Renderer");
+            Disposed = true;
         }
 
         [Header("DEBUG SETTINGS")]
 
-        [SerializeField] private bool debugNodes = true;
-        [SerializeField] private bool debugParents = true;
-        [SerializeField] private bool debugLOD = true;
-        [SerializeField] private float nodeScale = 1;
-        [SerializeField] private float randomOffset = 0f;
-        [SerializeField] private List<DebugPram> visibleLayers = new(14);
+        [SerializeField] private bool draw = true;
+        [SerializeField, ShowIf("@draw")] private bool syncJob = false;
+        [SerializeField, ShowIf("@draw")] private bool internalNodes = true;
+        [SerializeField, ShowIf("@draw")] private bool exceptions = false;
+        [SerializeField, ShowIf("@draw")] private bool lodValue = false;
+
+        [SerializeField, ShowIf("@draw")] private float nodeScale = 1;
+        [SerializeField, ShowIf("@draw")] private float randomOffset = 0f;
+
+
+        [Header("Octree layer visualizer")]
+        [SerializeField, ShowIf("@draw")] private List<DebugPram> visibleLayers = new(Settings.MaxDepth);
+        [Button] void EnableCenter() => visibleLayers.ForEach((x) => {  x.DrawCenter = true; });
+        [Button] void DisableCenter() => visibleLayers.ForEach((x) => {  x.DrawCenter = false; });
 
         [Serializable]
         class DebugPram
@@ -98,49 +102,59 @@ namespace Core.Rendering
             public Color color;
             public bool ShouldDraw => DrawBounds || DrawCenter;
         }
+
+
         private unsafe void OnDrawGizmos()
         {
-            if (debugNodes) DrawNode(octree.root);
+            if (!draw ||  Disposed) return;
+            if (syncJob && !octreeJob.IsCompleted) return;
+            
+            DrawNode(octree.root, 0, 0);
 
-            void DrawNode(in Node node)
+            void DrawNode(in Node node, in int depth, in float3 position)
             {
-                if (visibleLayers[node.Depth].ShouldDraw && (node.IsLeaf || debugParents))
+                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes))
                 {
                     float3 random = 0;
                     if (randomOffset != 0)
                     {
                         random = Unity.Mathematics.Random.CreateFromIndex((uint)node.GetHashCode()).NextFloat3(-1, 1) * randomOffset;
                     }
-                    var scale = SparseOctree.OctantLength(node.Depth) * nodeScale;
+                    var scale = SparseOctree.SubnodeLength(depth) * nodeScale;
                     float sphereRadius = scale / 10f;
 
-                    float3 position = node.Position + random;
+                    float3 pos = position + random;
                     float3 cubeSize = Vector3.one * scale;
 
-                    Gizmos.color = visibleLayers[node.Depth].color;
-                    if (visibleLayers[node.Depth].DrawBounds) Gizmos.DrawWireCube(position, cubeSize);
-                    if (visibleLayers[node.Depth].DrawCenter) Gizmos.DrawSphere(position, sphereRadius);
+                    Gizmos.color = visibleLayers[depth].color;
+                    if (visibleLayers[depth].DrawBounds) Gizmos.DrawWireCube(pos, cubeSize);
+                    if (visibleLayers[depth].DrawCenter) Gizmos.DrawSphere(pos, sphereRadius);
 
-                    if (debugLOD)
+                    if (lodValue)
                     {
-                        float distToCam = math.distance(Camera, node.Position) / (worldParameters.rootLength / 2f) * worldParameters.maxDepth;
-                        float nodeLOD = math.clamp(distToCam, 0, worldParameters.maxDepth);
-                        Handles.Label(node.Position, $"{nodeLOD}");
+                        UnityEditor.Handles.Label(pos, $"{octree.SubnodeLOD(pos)}");
                     }
                 }
 
                 if (!node.IsLeaf)
                 {
-                    for (int i = 0; i < node.Children.Count; i++)
+                    int _depth = depth + 1;
+                    for (int child = 0, start = 0; child < node.Count; child++)
                     {
-                        try { DrawNode(node.Children[i]); }
+                        SparseOctree.FindNext1(node._map, ref start, out int octantIndex);
+                        start = octantIndex + 1;
+                        float3 pos = SparseOctree.SubnodePosition(octantIndex, _depth, position);
+                        try
+                        {
+                            DrawNode(node[child], _depth, pos); 
+                        }
                         catch
                         {
-                            float3 p = SparseOctree.OctantPosition(i, node.Depth + 1, node.Position);
-                            float3 s = SparseOctree.OctantLength(node.Depth + 1);
+                            if (!exceptions) continue;
 
+                            float3 s = SparseOctree.SubnodeLength(_depth);
                             Gizmos.color = Color.red;
-                            Gizmos.DrawCube(p, s);
+                            Gizmos.DrawCube(pos, s);
                         }
 
                     }

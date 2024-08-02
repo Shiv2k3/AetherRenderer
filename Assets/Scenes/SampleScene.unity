@@ -151,24 +151,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6b3bfe7e5361926458312aa98b971829, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  worldParameters:
-    childrenPerThread: 4096
-    maxDepth: 9
-    rootLength: 10000
+  world:
+    poolDepth: 7
     sphereRadius: 4000
-  lastPos:
-    x: 0
-    y: 0
-    z: 0
-  updateCheckRadius: 10
-  totalNodesPooled: 0
-  debugNodes: 0
-  debugParents: 0
-  debugLOD: 0
+    updateThreshold: 16
+    nodesAvailable: 0
+    octreeCenter:
+      x: 0
+      y: 0
+      z: 0
+  Disposed: 1
+  draw: 1
+  syncJob: 0
+  internalNodes: 1
+  exceptions: 0
+  lodValue: 0
   nodeScale: 1
   randomOffset: 0
   visibleLayers:
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
   - DrawBounds: 0
@@ -186,30 +187,15 @@ MonoBehaviour:
   - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.024693727, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 1, g: 0.889333, b: 0, a: 1}
   - DrawBounds: 1
     DrawCenter: 0
-    color: {r: 1, g: 0.61699814, b: 0, a: 1}
-  - DrawBounds: 1
-    DrawCenter: 0
-    color: {r: 1, g: 0.8676656, b: 0.6556604, a: 1}
-  - DrawBounds: 0
-    DrawCenter: 0
-    color: {r: 0.3170109, g: 0.5471698, b: 0.20906018, a: 1}
-  - DrawBounds: 0
-    DrawCenter: 0
-    color: {r: 0.42052335, g: 0.509434, b: 0.45522735, a: 1}
-  - DrawBounds: 1
-    DrawCenter: 0
-    color: {r: 0.6792453, g: 0.24670699, b: 0.28352886, a: 1}
-  - DrawBounds: 1
-    DrawCenter: 0
-    color: {r: 0.6132076, g: 0.4936295, b: 0.3037113, a: 1}
+    color: {r: 1, g: 0, b: 0.33732796, a: 1}
 --- !u!4 &1632227328
 Transform:
   m_ObjectHideFlags: 0

@@ -1,9 +1,8 @@
 ﻿using Unity.Mathematics;
 using static Unity.Mathematics.math;
 
-namespace Core.Octree
+namespace Core.Util
 {
-    [System.Serializable]
     public struct PolarCoordinates
     {
         public float2 v;
