@@ -41,8 +41,6 @@ namespace Core.Octree
 
         public void Execute(int index)
         {
-            // Clear thread-locked children in pool
-            ChildrenPool.Data.ReleaseThread();
             // Get the current thread's octant
             Node octant = octants[index];
             // Subdivide the octant
