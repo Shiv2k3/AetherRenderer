@@ -152,7 +152,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   worldParameters:
-    maxDepth: 8
+    childrenPerThread: 4096
+    maxDepth: 9
     rootLength: 10000
     sphereRadius: 4000
   lastPos:
@@ -160,6 +161,7 @@ MonoBehaviour:
     y: 0
     z: 0
   updateCheckRadius: 10
+  totalNodesPooled: 0
   debugNodes: 0
   debugParents: 0
   debugLOD: 0
@@ -187,12 +189,27 @@ MonoBehaviour:
   - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0.889333, b: 0, a: 1}
   - DrawBounds: 1
     DrawCenter: 0
     color: {r: 1, g: 0.61699814, b: 0, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 1, g: 0.8676656, b: 0.6556604, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0.3170109, g: 0.5471698, b: 0.20906018, a: 1}
+  - DrawBounds: 0
+    DrawCenter: 0
+    color: {r: 0.42052335, g: 0.509434, b: 0.45522735, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.6792453, g: 0.24670699, b: 0.28352886, a: 1}
+  - DrawBounds: 1
+    DrawCenter: 0
+    color: {r: 0.6132076, g: 0.4936295, b: 0.3037113, a: 1}
 --- !u!4 &1632227328
 Transform:
   m_ObjectHideFlags: 0

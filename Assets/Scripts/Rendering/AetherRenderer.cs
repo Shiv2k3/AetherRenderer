@@ -1,6 +1,7 @@
 using Core.Octree;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Jobs;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
@@ -29,8 +30,11 @@ namespace Core.Rendering
             System.Diagnostics.Stopwatch t = new();
             t.Start();
 
+            debugNodes = false;
             octree.Camera = Camera;
-            octree.Schedule(8, 1).Complete();
+            var jh = octree.Schedule(8, 1);
+            jh.Complete();
+            debugNodes = true;
 
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
@@ -38,7 +42,6 @@ namespace Core.Rendering
 
         [SerializeField] private float3 lastPos;
         [SerializeField] private float updateCheckRadius;
-        [SerializeField] private int totalNodesPooled;
 
         private float3 Camera
         {
@@ -56,17 +59,6 @@ namespace Core.Rendering
 
         private void Update()
         {
-            totalNodesPooled = 0;
-            foreach (var threadSeg in SparseOctree.ChildrenPool.Data._thread_size_children)
-            {
-                int size = 1;
-                foreach (var sizeSeg in threadSeg)
-                {
-                    totalNodesPooled += sizeSeg.Length * size;
-                    size++;
-                }
-            }
-
             float distance = math.distance(Camera, lastPos);
             if (distance > updateCheckRadius)
             {

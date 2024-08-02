@@ -21,6 +21,7 @@ namespace Core.Octree
             _data = (byte)((nodes.Length - 1) & _countMask);
             _data |= (byte)((thread << 3) & _threadMask);
             IsEmpty = true;
+
             if (Count != nodes.Length) throw new($"Expected Count value {nodes.Length}, got {Count}");
             if (Thread != thread) throw new($"Expected thread value {thread}, got {Thread}");
         }

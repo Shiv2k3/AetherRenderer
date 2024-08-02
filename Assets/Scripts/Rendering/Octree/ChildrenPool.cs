@@ -8,17 +8,21 @@ namespace Core.Octree
     {
         private NativeArray<Node> _nodePool;
         public NativeArray<NativeArray<NativeList<Children>>> _thread_size_children;
+        public NativeArray<NativeList<Children>> _thread_released;
 
         public ChildrenPool(int childrenPerThread)
         {
             _nodePool = new(childrenPerThread * 36 * JobsUtility.ThreadIndexCount, Allocator.Persistent);
             _thread_size_children = new(JobsUtility.ThreadIndexCount, Allocator.Persistent);
+            _thread_released = new(JobsUtility.ThreadIndexCount, Allocator.Persistent);
 
             // Each thread has its own segment of children, threadSegment
             // Each threadSegment has 8 pools of children organized their size, sizeSegment
             // Each sizeSegment has a childrenPerSize elements, every children has the same number of nodes
             for (int thread = 0, poolIndex = 0; thread < JobsUtility.ThreadIndexCount; thread++)
             {
+                _thread_released[thread] = new(childrenPerThread / 8, Allocator.Persistent);
+
                 NativeArray<NativeList<Children>> threadSegment = new(8, Allocator.Persistent);
                 for (int size = 1; size <= 8; size++)
                 {
@@ -72,8 +76,6 @@ namespace Core.Octree
                 threadSeg[nodeCount - 1] = sizeSeg;
                 _thread_size_children[JobsUtility.ThreadIndex] = threadSeg;
 
-                Debug.LogWarning($"1 children rented: [{children.Thread},{children.Count}] = {_thread_size_children[children.Thread][children.Count - 1].Length}");
-
                 return children;
             }
 
@@ -82,12 +84,9 @@ namespace Core.Octree
         public unsafe void Release(ref Children children)
         {
             ReleaseChildren(ref children);
-            int preCount = _thread_size_children[children.Thread][children.Count - 1].Length;
             var threadSeg = _thread_size_children[children.Thread];
-            var sizeSeg = threadSeg[children.Count - 1];
+            var sizeSeg = threadSeg[children.Count - 1].AsParallelWriter();
             sizeSeg.AddNoResize(children);
-
-            Debug.LogWarning($"1 children released: [{children.Thread},{children.Count}] = {_thread_size_children[children.Thread][children.Count - 1].Length}");
 
             static void ReleaseChildren(ref Children children)
             {
@@ -101,6 +100,17 @@ namespace Core.Octree
             }
         }
 
+        public void ReleaseThread(int thread = -1)
+        {
+            thread = thread == -1 ? JobsUtility.ThreadIndex : thread;
+            var list = _thread_released[thread];
+            for (int i = 0; i < list.Length; i++)
+            {
+                var children = list[i];
+                Release(ref children);
+            }
+            _thread_released[thread].Clear();
+        }
         public void Dispose()
         {
             _thread_size_children.Dispose();

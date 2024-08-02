@@ -24,14 +24,14 @@ namespace Core.Octree
 
         public SparseOctree(in WorldDiscriptor worldDiscriptor)
         {
-            root = new(0, 0);
-            ChildrenPool.Data = new ChildrenPool(7_000);
             World.Data = worldDiscriptor;
+            root = new(0, 0);
+            ChildrenPool.Data = new ChildrenPool(worldDiscriptor.childrenPerThread);
 
             _thread_currentChildren = new(JobsUtility.ThreadIndexCount, Allocator.Persistent);
             for (int i = 0; i < JobsUtility.ThreadIndexCount; i++)
             {
-                _thread_currentChildren[i] = new(0, Allocator.Persistent);
+                _thread_currentChildren[i] = new(8, Allocator.Persistent);
             }
 
             root.Divide(255);
@@ -41,6 +41,8 @@ namespace Core.Octree
 
         public void Execute(int index)
         {
+            // Clear thread-locked children in pool
+            ChildrenPool.Data.ReleaseThread();
             // Get the current thread's octant
             Node octant = octants[index];
             // Subdivide the octant
@@ -55,9 +57,10 @@ namespace Core.Octree
         /// <param name="node">The node to divide, should not be previously divided</param>
         private readonly void Subdivide(ref Node node)
         {
+            if (!node.IsValid) return;
+            
             // Get a list of the current children
             var currentChildren = _thread_currentChildren[JobsUtility.ThreadIndex];
-            if (currentChildren.Length > 0) throw new("Previous use indicates not all children were found");
             if (!node.IsLeaf)
             {
                 for (int i = 0; i < node.Children.Count; i++)
@@ -96,7 +99,7 @@ namespace Core.Octree
                 {
                     var c = node.Children;
                     ChildrenPool.Data.Release(ref c);
-                    node.Children = c;
+                    node.Children = Children.Empty;
                 }
 
                 return;
@@ -106,11 +109,11 @@ namespace Core.Octree
             {
                 var c = node.Children;
                 ChildrenPool.Data.Release(ref c);
-                node.Children = c;
+                node.Children = Children.Empty;
             }
 
             // Divide to have the surface-intersecting children
-            node.Divide(active);
+            if (prevActive != active) node.Divide(active);
             Children children = node.Children;
             for (int i = 0; i < children.Count; i++)
             {

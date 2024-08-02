@@ -77,8 +77,8 @@ namespace Core.Octree
             int octantDepth = _depth + 1;
             for (int i = 0, index = 0; i < 8; i++)
             {
-                int bit = 1 << i;
-                if ((activeOctants & bit) == bit)
+                int bitMask = 1 << i;
+                if ((activeOctants & bitMask) == bitMask)
                 {
                     var position = SparseOctree.OctantPosition(i, octantDepth, _position);
                     _children[index] = new(position, octantDepth);
