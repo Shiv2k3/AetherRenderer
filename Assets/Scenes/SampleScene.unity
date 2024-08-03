@@ -154,6 +154,7 @@ MonoBehaviour:
   world:
     poolDepth: 7
     sphereRadius: 4000
+    lodFactor: 2.5
     updateThreshold: 16
     nodesAvailable: 0
     octreeCenter:

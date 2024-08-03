@@ -17,6 +17,9 @@ namespace Core.Util
         [Tooltip("The radius of the test sphere")]
         [Min(0)] public float sphereRadius;
 
+        [Tooltip("The LOD factor")]
+        [Min(0)] public float lodFactor;
+
         [Tooltip("The distance required between last and new octree center to trigger an update")]
         [Min(0)] public float updateThreshold;
 

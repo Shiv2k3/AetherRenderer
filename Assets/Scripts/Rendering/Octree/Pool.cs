@@ -58,7 +58,10 @@ namespace Core.Rendering.Octree
         /// <param name="chunk">The pointer to the first voxel of the lease</param>
         public void Lease(out int chunkIndex, out Voxel* chunk)
         {
-            chunkIndex = lastChunkIndex[0];
+            chunkIndex = lastChunkIndex.AsReadOnly()[0];
+#if DEBUG
+            if (chunkIndex < 0) throw new("The pool is out of chunks");
+#endif
             chunk = (Voxel*)chunks.GetUnsafePtr() + chunkIndex;
             lastChunkIndex[0] -= VoxelsPerChunk;
             chunkIndex /= VoxelsPerChunk;

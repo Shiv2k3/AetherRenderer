@@ -25,17 +25,10 @@ namespace Core.Rendering.Octree
 
         public readonly static SharedStatic<Pool> Pool = SharedStatic<Pool>.GetOrCreate<Pool, Node>();
         public readonly static SharedStatic<Settings> Settings = SharedStatic<Settings>.GetOrCreate<Settings, SparseOctree>();
-
-        [NativeDisableContainerSafetyRestriction] private UnsafeList<Voxel> _tempData;
-        [NativeDisableContainerSafetyRestriction] private UnsafeList<float3> _tempPosition;
-
         public SparseOctree(in Settings settings)
         {
             Settings.Data = settings;
             Pool.Data = new Pool(settings.poolDepth);
-
-            _tempData = new(JobsUtility.ThreadIndexCount * 8, Allocator.Persistent); _tempData.Length = _tempData.Capacity;
-            _tempPosition = new(JobsUtility.ThreadIndexCount * 8, Allocator.Persistent); _tempPosition.Length = _tempPosition.Capacity;
 
             root = *Pool.Data.Lease(1);
             root.AssignSubnodes(Pool.Data.Lease(8), 255);
@@ -43,8 +36,6 @@ namespace Core.Rendering.Octree
         public readonly void Dispose()
         {
             Pool.Data.Dispose();
-            _tempData.Dispose();
-            _tempPosition.Dispose();
             Debug.Log("Disposed Octree");
         }
 
@@ -68,8 +59,8 @@ namespace Core.Rendering.Octree
             var _depth = depth + 1;
             if (_depth == Util.Settings.MaxDepth)
             {
-                //Pool.Data.Lease(out int index, out Voxel* data);
-                //node.AssignChunk(index, data);
+                Pool.Data.Lease(out int index, out Voxel* data);
+                node.AssignChunk(index, data);
                 return;
             }
 
@@ -78,35 +69,43 @@ namespace Core.Rendering.Octree
             var _count = 0; // number of subnodes
             //var _unifrom = 0; // bitmap of nodes with same voxel type as parent
             var _map = 0; // bitmap of active nodes
-            int tempStart = JobsUtility.ThreadIndex * 8; // The start index of temp data for the current thread
+            var tempData = new NativeList<Voxel>(8, Allocator.Temp);
+            var tempPosition = new NativeList<float3>(8, Allocator.Temp);
             for (int i = 0; i < 8; i++)
             {
                 float3 _position = SubnodePosition(i, _depth, position);
-                if (Evaluate(_position, _depth, out Voxel data) && _depth <= Util.Settings.MaxDepth - SubnodeLOD(_position))
+                if (Evaluate(_position, _depth, out Voxel _data) && _depth <= Util.Settings.MaxDepth - SubnodeLOD(_position))
                 {
                     _map |= 1 << i;
 
-                    if (data.id == node.data.id)
+                    if (_data.id == node.data.id)
                     {
                         //_unifrom |= 1 << i;
                     }
 
-                    _tempData[tempStart + _count] = data;
-                    _tempPosition[tempStart + _count] = _position;
+                    tempData.AddNoResize(_data);
+                    tempPosition.AddNoResize(_position);
                     _count++;
                 }
             }
 
             // Only continue if there are subnodes and they are all not the same
-            if (_count > 0) node.AssignSubnodes(Pool.Data.Lease(_count), (byte)_map);
-            else return;
-
-            // Assign data and subdivide the subnodes
-            for (int i = 0; i < _count; i++)
+            if (_count > 0)
             {
-                //node[i].data = _tempData[tempStart + i];
-                Subdivide(ref node[i], _depth, _tempPosition[tempStart + i]);
+                Node* _nodes = Pool.Data.Lease(_count);
+                node.AssignSubnodes(_nodes, (byte)_map);
+
+                // Assign data and subdivide the subnodes
+                for (int i = 0; i < _count; i++)
+                {
+                    node[i].data = tempData[i];
+                    Subdivide(ref _nodes[i], _depth, tempPosition[i]);
+                }
+
+                tempData.Dispose();
+                tempPosition.Dispose();
             }
+            else return;
         }
         private readonly bool Evaluate(in float3 position, in int depth, out Voxel data)
         {
@@ -117,7 +116,7 @@ namespace Core.Rendering.Octree
         public readonly float SubnodeLOD(in float3 position)
         {
             float distToCam = math.distance(Settings.Data.octreeCenter, position) / Util.Settings.HalfWorldSize * Util.Settings.MaxDepth;
-            return math.clamp(distToCam, 0, Util.Settings.MaxDepth);
+            return math.clamp(distToCam, 0, Util.Settings.MaxDepth) * Settings.Data.lodFactor;
         }
         public static float3 SubnodePosition(in int index, in int depth, in float3 parentPosition)
         {

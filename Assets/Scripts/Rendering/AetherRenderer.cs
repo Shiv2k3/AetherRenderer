@@ -103,7 +103,6 @@ namespace Core.Rendering
             public bool ShouldDraw => DrawBounds || DrawCenter;
         }
 
-
         private unsafe void OnDrawGizmos()
         {
             if (!draw ||  Disposed) return;
@@ -113,7 +112,7 @@ namespace Core.Rendering
 
             void DrawNode(in Node node, in int depth, in float3 position)
             {
-                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes))
+                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr))
                 {
                     float3 random = 0;
                     if (randomOffset != 0)
@@ -127,9 +126,13 @@ namespace Core.Rendering
                     float3 cubeSize = Vector3.one * scale;
 
                     Gizmos.color = visibleLayers[depth].color;
+                    if (node.isChunkPtr)
+                    {
+                        Gizmos.DrawCube(pos, cubeSize);
+                        return;
+                    }
                     if (visibleLayers[depth].DrawBounds) Gizmos.DrawWireCube(pos, cubeSize);
                     if (visibleLayers[depth].DrawCenter) Gizmos.DrawSphere(pos, sphereRadius);
-
                     if (lodValue)
                     {
                         UnityEditor.Handles.Label(pos, $"{octree.SubnodeLOD(pos)}");
