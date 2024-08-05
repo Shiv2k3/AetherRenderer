@@ -14,5 +14,13 @@ namespace Core.Util
             Radial = radial;
             Inclination = inclination;
         }
+
+        public static PolarCoordinates GetPolar(float3 p)
+        {
+            p = normalizesafe(p, up());
+            float radial = atan2(p.z, p.x);
+            float inclination = acos(p.y);
+            return new PolarCoordinates(radial, inclination);
+        }
     }
 }

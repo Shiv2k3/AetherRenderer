@@ -1,4 +1,5 @@
-﻿using Unity.Collections;
+﻿using Core.Util;
+using Unity.Collections;
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Jobs.LowLevel.Unsafe;
 using Unity.Mathematics;
@@ -9,10 +10,10 @@ namespace Core.Rendering.Octree
     {
         private const int VoxelsPerChunk = 4096;
         private const int TotalChunks = 256;
-        private readonly int nodesPerThread;
+        public readonly int nodesPerThread;
 
         private readonly NativeArray<Voxel> chunks;
-        private NativeArray<int> lastChunkIndex;
+        private NativeList<int> lastChunkIndex;
 
         private readonly NativeArray<Node> pool;
         public NativeArray<int> lengths;
@@ -21,7 +22,7 @@ namespace Core.Rendering.Octree
             int totalVoxels = VoxelsPerChunk * TotalChunks;
             chunks = new(totalVoxels, Allocator.Persistent);
             lastChunkIndex = new(1, Allocator.Persistent);
-            lastChunkIndex[0] = totalVoxels - VoxelsPerChunk - 1;
+            lastChunkIndex.AddNoResize(totalVoxels - VoxelsPerChunk - 1);
 
             int totalNodes = ((int)math.pow(8, allocationDepth + 1) - 1) / 7;
             pool = new(totalNodes, Allocator.Persistent, NativeArrayOptions.ClearMemory);
@@ -58,12 +59,12 @@ namespace Core.Rendering.Octree
         /// <param name="chunk">The pointer to the first voxel of the lease</param>
         public void Lease(out int chunkIndex, out Voxel* chunk)
         {
-            chunkIndex = lastChunkIndex.AsReadOnly()[0];
+            chunkIndex = lastChunkIndex.AsParallelReader()[0];
 #if DEBUG
             if (chunkIndex < 0) throw new("The pool is out of chunks");
 #endif
             chunk = (Voxel*)chunks.GetUnsafePtr() + chunkIndex;
-            lastChunkIndex[0] -= VoxelsPerChunk;
+            ((int*)lastChunkIndex.AsParallelWriter().Ptr)[0] -= VoxelsPerChunk;
             chunkIndex /= VoxelsPerChunk;
         }
     }

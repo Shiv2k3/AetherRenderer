@@ -20,11 +20,14 @@ namespace Core.Util
         [Tooltip("The LOD factor")]
         [Min(0)] public float lodFactor;
 
+        [Tooltip("The subdivision factor")]
+        [Min(0)] public float subdivisionFactor;
+
         [Tooltip("The distance required between last and new octree center to trigger an update")]
         [Min(0)] public float updateThreshold;
 
         [Tooltip("The total number of nodes in the pool")]
-        [ReadOnly] public int nodesAvailable;
+        [ReadOnly] public int nodesUsed;
 
         [Tooltip("The position used to calculate the SVO")]
         [ReadOnly] public float3 octreeCenter;

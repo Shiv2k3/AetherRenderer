@@ -1,8 +1,7 @@
 using Core.Rendering.Octree;
 using Core.Util;
 using Sirenix.OdinInspector;
-using System;
-using System.Collections.Generic;
+using System.Threading.Tasks;
 using Unity.Jobs;
 using Unity.Mathematics;
 using UnityEngine;
@@ -13,7 +12,7 @@ namespace Core.Rendering
     {
         [SerializeField] private Settings world;
         private SparseOctree octree;
-        private JobHandle octreeJob;
+
         [SerializeField, ReadOnly] private bool Disposed;
 
         [ContextMenu("Create")]
@@ -21,7 +20,6 @@ namespace Core.Rendering
         {
             octree = new(world);
             world.octreeCenter = 0;
-            draw = true;
             Disposed = false;
         }
 
@@ -31,11 +29,10 @@ namespace Core.Rendering
             System.Diagnostics.Stopwatch t = new();
             t.Start();
 
-            SparseOctree.Settings.Data = world;
+            SparseOctree.settings.Data = world;
             octree.ResetPool();
-            octreeJob = octree.Schedule(8, 1);
-            octreeJob.Complete();
-
+            octree.Schedule(8, 1).Complete();
+            
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
         }
@@ -65,7 +62,7 @@ namespace Core.Rendering
                 Execute();
             }
 #if DEBUG
-            world.nodesAvailable = octree.NodesAvailable();
+            world.nodesUsed = octree.NodesUsed();
 #endif
         }
 
@@ -77,24 +74,29 @@ namespace Core.Rendering
             Disposed = true;
         }
 
+#if DEBUG
         [Header("DEBUG SETTINGS")]
 
         [SerializeField] private bool draw = true;
-        [SerializeField, ShowIf("@draw")] private bool syncJob = false;
+        [SerializeField, ShowIf("@draw")] private bool nodes = false;
         [SerializeField, ShowIf("@draw")] private bool internalNodes = true;
         [SerializeField, ShowIf("@draw")] private bool exceptions = false;
         [SerializeField, ShowIf("@draw")] private bool lodValue = false;
+        [SerializeField, ShowIf("@draw")] private bool voxel = false;
+        [SerializeField, ShowIf("@draw")] private bool featurePoints = false;
 
         [SerializeField, ShowIf("@draw")] private float nodeScale = 1;
         [SerializeField, ShowIf("@draw")] private float randomOffset = 0f;
+        [SerializeField, ShowIf("@draw")] private float pointScale = 1f;
+        [SerializeField, ShowIf("@draw")] private float lineScale = 1f;
 
 
         [Header("Octree layer visualizer")]
-        [SerializeField, ShowIf("@draw")] private List<DebugPram> visibleLayers = new(Settings.MaxDepth);
-        [Button] void EnableCenter() => visibleLayers.ForEach((x) => {  x.DrawCenter = true; });
-        [Button] void DisableCenter() => visibleLayers.ForEach((x) => {  x.DrawCenter = false; });
+        [SerializeField, ShowIf("@draw")] private System.Collections.Generic.List<DebugPram> visibleLayers = new(Settings.MaxDepth);
+        [Button] void EnableBound() => visibleLayers.ForEach((x) => {  x.DrawBounds = true; });
+        [Button] void DisableBound() => visibleLayers.ForEach((x) => {  x.DrawBounds = false; });
 
-        [Serializable]
+        [System.Serializable]
         class DebugPram
         {
             public bool DrawBounds;
@@ -106,13 +108,26 @@ namespace Core.Rendering
         private unsafe void OnDrawGizmos()
         {
             if (!draw ||  Disposed) return;
-            if (syncJob && !octreeJob.IsCompleted) return;
-            
-            DrawNode(octree.root, 0, 0);
+            if (nodes) DrawNode(octree.root, 0, 0);
+            if (featurePoints)
+            {
+                var rng = Unity.Mathematics.Random.CreateFromIndex(0);
+                foreach (var list in octree.featurePoints)
+                {
+                    foreach (var p in list)
+                    {
+                        float3 r = 0;
+                        if(randomOffset != 0) r = rng.NextFloat3() * randomOffset;
+                        var pos = p + r;
+                        Gizmos.color = Color.blue;
+                        Gizmos.DrawSphere(pos, pointScale);
+                    }
+                }
+            }
 
             void DrawNode(in Node node, in int depth, in float3 position)
             {
-                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr))
+                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr) && (!voxel || (voxel && math.distance(position, CameraPosition) < Table.HalfDiagonal[depth] * 2f)))
                 {
                     float3 random = 0;
                     if (randomOffset != 0)
@@ -132,7 +147,16 @@ namespace Core.Rendering
                         return;
                     }
                     if (visibleLayers[depth].DrawBounds) Gizmos.DrawWireCube(pos, cubeSize);
-                    if (visibleLayers[depth].DrawCenter) Gizmos.DrawSphere(pos, sphereRadius);
+                    if (visibleLayers[depth].DrawCenter)
+                    {
+                        if (voxel)
+                        {
+                            Gizmos.color = node.data.Density < 0 ? Color.red : Color.green;
+                            Gizmos.DrawLine(pos, pos + node.data.Normal * math.abs(node.data.Density) * lineScale);
+                        }
+                        Gizmos.DrawSphere(pos, pointScale);
+                    }
+
                     if (lodValue)
                     {
                         UnityEditor.Handles.Label(pos, $"{octree.SubnodeLOD(pos)}");
@@ -164,6 +188,7 @@ namespace Core.Rendering
                 }
             }
         }
+#endif
 
     }
 

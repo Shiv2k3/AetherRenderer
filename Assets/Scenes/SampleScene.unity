@@ -122,6 +122,51 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &1325623661
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1325623663}
+  - component: {fileID: 1325623662}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1325623662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1325623661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 64d2f3a1cf2a7cb4a9dbe9b92e7ff204, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  bitmapIndex: 255
+--- !u!4 &1325623663
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1325623661}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1632227326
 GameObject:
   m_ObjectHideFlags: 0
@@ -153,24 +198,29 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   world:
     poolDepth: 7
-    sphereRadius: 4000
-    lodFactor: 2.5
+    sphereRadius: 4100
+    lodFactor: 3.5
+    subdivisionFactor: 1
     updateThreshold: 16
-    nodesAvailable: 0
+    nodesUsed: 0
     octreeCenter:
       x: 0
       y: 0
       z: 0
   Disposed: 1
   draw: 1
-  syncJob: 0
+  nodes: 1
   internalNodes: 1
   exceptions: 0
   lodValue: 0
+  voxel: 0
+  featurePoints: 1
   nodeScale: 1
   randomOffset: 0
+  pointScale: 1
+  lineScale: 1
   visibleLayers:
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
   - DrawBounds: 0
@@ -184,19 +234,19 @@ MonoBehaviour:
     color: {r: 0, g: 1, b: 0.78526473, a: 1}
   - DrawBounds: 0
     DrawCenter: 0
-    color: {r: 0, g: 1, b: 0.5451791, a: 1}
+    color: {r: 0, g: 0.20754719, b: 0.11313357, a: 1}
   - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.024693727, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
-    color: {r: 1, g: 0.889333, b: 0, a: 1}
-  - DrawBounds: 1
+    color: {r: 0.49056602, g: 0.43669996, b: 0, a: 1}
+  - DrawBounds: 0
     DrawCenter: 0
-    color: {r: 1, g: 0, b: 0.33732796, a: 1}
+    color: {r: 0.3301887, g: 0, b: 0.111357786, a: 1}
 --- !u!4 &1632227328
 Transform:
   m_ObjectHideFlags: 0
@@ -206,7 +256,7 @@ Transform:
   m_GameObject: {fileID: 1632227326}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4000, y: 0, z: 0}
+  m_LocalPosition: {x: 4100, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -217,3 +267,4 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1632227328}
+  - {fileID: 1325623663}

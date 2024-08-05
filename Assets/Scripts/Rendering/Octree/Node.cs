@@ -1,4 +1,6 @@
-﻿namespace Core.Rendering.Octree
+﻿using Core.Util;
+
+namespace Core.Rendering.Octree
 {
     public unsafe struct Node
     {
