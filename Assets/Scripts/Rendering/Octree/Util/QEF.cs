@@ -6,7 +6,7 @@ namespace Core.Util
 {
     public unsafe class QEF
     {
-        const int SVD_NUM_SWEEPS = 10;
+        const int SVD_NUM_SWEEPS = 5;
         const float PSUEDO_INVERSE_THRESHOLD = 0.1f;
         static void svd_mul_matrix_vec(float4* result, float3x3 a, float4 b)
         {

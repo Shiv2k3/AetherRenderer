@@ -1,9 +1,11 @@
 using Core.Rendering.Octree;
 using Core.Util;
 using Sirenix.OdinInspector;
-using System.Threading.Tasks;
+using System;
+using System.Collections.Generic;
 using Unity.Jobs;
 using Unity.Mathematics;
+using UnityEditor;
 using UnityEngine;
 
 namespace Core.Rendering
@@ -30,9 +32,9 @@ namespace Core.Rendering
             t.Start();
 
             SparseOctree.settings.Data = world;
-            octree.ResetPool();
+            octree.Reset();
             octree.Schedule(8, 1).Complete();
-            
+
             t.Stop();
             Debug.Log("Completion Time " + t.Elapsed.TotalMilliseconds + "MS");
         }
@@ -83,41 +85,32 @@ namespace Core.Rendering
         [SerializeField, ShowIf("@draw")] private bool exceptions = false;
         [SerializeField, ShowIf("@draw")] private bool lodValue = false;
         [SerializeField, ShowIf("@draw")] private bool voxel = false;
-        [SerializeField, ShowIf("@draw")] private bool featurePoints = false;
+        [SerializeField, ShowIf("@draw")] private bool vertices = false;
+        [SerializeField, ShowIf("@draw")] private bool faces = false;
 
         [SerializeField, ShowIf("@draw")] private float nodeScale = 1;
         [SerializeField, ShowIf("@draw")] private float randomOffset = 0f;
         [SerializeField, ShowIf("@draw")] private float pointScale = 1f;
         [SerializeField, ShowIf("@draw")] private float lineScale = 1f;
-
-
+        
         [Header("Octree layer visualizer")]
-        [SerializeField, ShowIf("@draw")] private System.Collections.Generic.List<DebugPram> visibleLayers = new(Settings.MaxDepth);
+        [SerializeField, ShowIf("@draw")] private List<DebugPram> visibleLayers = new(Settings.MaxDepth);
         [Button] void EnableBound() => visibleLayers.ForEach((x) => {  x.DrawBounds = true; });
         [Button] void DisableBound() => visibleLayers.ForEach((x) => {  x.DrawBounds = false; });
-
-        [System.Serializable]
-        class DebugPram
-        {
-            public bool DrawBounds;
-            public bool DrawCenter;
-            public Color color;
-            public bool ShouldDraw => DrawBounds || DrawCenter;
-        }
 
         private unsafe void OnDrawGizmos()
         {
             if (!draw ||  Disposed) return;
             if (nodes) DrawNode(octree.root, 0, 0);
-            if (featurePoints)
+            if (vertices)
             {
                 var rng = Unity.Mathematics.Random.CreateFromIndex(0);
                 foreach (var list in octree.featurePoints)
                 {
-                    foreach (var p in list)
+                    foreach(var p in list)
                     {
                         float3 r = 0;
-                        if(randomOffset != 0) r = rng.NextFloat3() * randomOffset;
+                        if (randomOffset != 0) r = rng.NextFloat3() * randomOffset;
                         var pos = p + r;
                         Gizmos.color = Color.blue;
                         Gizmos.DrawSphere(pos, pointScale);
@@ -127,7 +120,7 @@ namespace Core.Rendering
 
             void DrawNode(in Node node, in int depth, in float3 position)
             {
-                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr) && (!voxel || (voxel && math.distance(position, CameraPosition) < Table.HalfDiagonal[depth] * 2f)))
+                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr) && (!voxel || (voxel && math.distance(CameraPosition, position) < SparseOctree.SubnodeLength(depth) * 2)))
                 {
                     float3 random = 0;
                     if (randomOffset != 0)
@@ -153,6 +146,7 @@ namespace Core.Rendering
                         {
                             Gizmos.color = node.data.Density < 0 ? Color.red : Color.green;
                             Gizmos.DrawLine(pos, pos + node.data.Normal * math.abs(node.data.Density) * lineScale);
+                            Handles.Label(pos + (float3)Camera.current.transform.right * 0.25f, node.data.Density.ToString());
                         }
                         Gizmos.DrawSphere(pos, pointScale);
                     }
@@ -188,8 +182,17 @@ namespace Core.Rendering
                 }
             }
         }
+
+        [System.Serializable]
+        class DebugPram
+        {
+            public bool DrawBounds;
+            public bool DrawCenter;
+            public Color color;
+            public bool ShouldDraw => DrawBounds || DrawCenter;
+        }
+
 #endif
 
     }
-
 }

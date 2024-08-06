@@ -7,12 +7,13 @@ namespace Core.Util
         public float Distance;
         public float3 Gradient;
         public uint Material;
-
+        public float3 Point;
         public HermiteData(float distance, uint material, float3 gradient)
         {
             Distance = distance;
             Material = material;
             Gradient = gradient;
+            Point = gradient * -distance;
         }
     }
 }
