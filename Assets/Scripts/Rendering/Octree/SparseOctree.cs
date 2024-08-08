@@ -96,8 +96,8 @@ namespace Core.Rendering.Octree
                     int ei1 = Table.EdgeIndexTable[_map][edge * 2 + 0];
                     int ei2 = Table.EdgeIndexTable[_map][edge * 2 + 1];
 
-                    float d1 = tempData[ei1].Distance;
-                    float d2 = tempData[ei2].Distance;
+                    float d1 = math.clamp(tempData[ei1].Distance, 0, 1);
+                    float d2 = math.clamp(tempData[ei2].Distance, 0 , 1);
 
                     if (math.sign(d1) != math.sign(d2))
                     {
@@ -125,7 +125,7 @@ namespace Core.Rendering.Octree
                 }
             }
 
-            // Only continue if there are subnodes and they are all not the same
+            // Subdivide active nodes
             if (_count != 0)
             {
                 // Assign data and subdivide the subnodes
@@ -143,14 +143,7 @@ namespace Core.Rendering.Octree
         {
             float sD = SDFs.SDSphere(position, settings.Data.sphereRadius, out var sG);
             data = new(sD, 0, sG);
-
-            float3 surfacePoint = data.Point + position;
-            //int r = (int)math.pow(math.pow(8, depth), 1f / 3f) / 2;
-            //int pI = IndexPosition.CellIndex(surfacePoint, r);
-            //int oI = IndexPosition.CellIndex(position, r);
-            //return pI == oI;
-            return SDFs.SDBox(data.Point, SubnodeLength(depth) * settings.Data.subdivisionFactor) <= 0;
-            //return math.abs(data.Distance) <= Table.HalfDiagonal[depth] * settings.Data.subdivisionFactor;
+            return math.abs(data.Distance) <= Table.HalfDiagonal[depth] * settings.Data.subdivisionFactor;
         }
         public readonly float SubnodeLOD(in float3 position)
         {

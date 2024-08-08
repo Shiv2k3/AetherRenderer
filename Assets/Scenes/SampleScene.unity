@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64d2f3a1cf2a7cb4a9dbe9b92e7ff204, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bitmapIndex: 2
+  bitmapIndex: 48
 --- !u!4 &1325623663
 Transform:
   m_ObjectHideFlags: 0
@@ -198,7 +198,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   world:
     poolDepth: 7
-    sphereRadius: 4090
+    sphereRadius: 4000
     lodFactor: 4
     subdivisionFactor: 1
     updateThreshold: 16
@@ -212,43 +212,43 @@ MonoBehaviour:
       z: 0
   Disposed: 1
   draw: 1
-  nodes: 1
-  internalNodes: 1
+  nodes: 0
+  internalNodes: 0
   exceptions: 0
   lodValue: 0
   voxel: 0
-  vertices: 0
-  faces: 1
+  vertices: 1
+  faces: 0
   nodeScale: 1
   randomOffset: 0
   pointScale: 5
   lineScale: 10
   visibleLayers:
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.43544197, g: 0, b: 1, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 0.25945473, b: 1, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.78526473, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 0.20754719, b: 0.11313357, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.024693727, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.49056602, g: 0.43669996, b: 0, a: 1}
-  - DrawBounds: 1
+  - DrawBounds: 0
     DrawCenter: 0
     color: {r: 0.3301887, g: 0, b: 0.111357786, a: 1}
 --- !u!4 &1632227328
