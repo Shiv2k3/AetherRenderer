@@ -151,7 +151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 64d2f3a1cf2a7cb4a9dbe9b92e7ff204, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  bitmapIndex: 255
+  bitmapIndex: 2
 --- !u!4 &1325623663
 Transform:
   m_ObjectHideFlags: 0
@@ -202,9 +202,9 @@ MonoBehaviour:
     lodFactor: 4
     subdivisionFactor: 1
     updateThreshold: 16
-    addSingleEdges: 1
-    addSameSignedEdges: 1
-    pointsRequiredForQEF: 2
+    addSingleEdges: 0
+    addSameSignedEdges: 0
+    pointsRequiredForQEF: 3
     nodesUsed: 0
     octreeCenter:
       x: 0
@@ -218,38 +218,38 @@ MonoBehaviour:
   lodValue: 0
   voxel: 0
   vertices: 0
-  faces: 0
+  faces: 1
   nodeScale: 1
   randomOffset: 0
-  pointScale: 1
+  pointScale: 5
   lineScale: 10
   visibleLayers:
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.43544197, g: 0, b: 1, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 0.25945473, b: 1, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.78526473, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 0.20754719, b: 0.11313357, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.024693727, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
   - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.49056602, g: 0.43669996, b: 0, a: 1}
-  - DrawBounds: 0
-    DrawCenter: 1
+  - DrawBounds: 1
+    DrawCenter: 0
     color: {r: 0.3301887, g: 0, b: 0.111357786, a: 1}
 --- !u!4 &1632227328
 Transform:

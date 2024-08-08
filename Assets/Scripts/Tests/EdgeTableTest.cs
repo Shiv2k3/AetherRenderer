@@ -47,16 +47,19 @@ public class OctantVisualizer : MonoBehaviour
         {
             List<int> edges = new List<int>();
 
-            for (int j = 0; j < Edges.Length; j++)
+            for (int j = 0; j < UnitCorners.Length; j++)
             {
-                int[] edge = Edges[j];
-                int p1 = edge[0];
-                int p2 = edge[1];
-
-                if (((i >> p1) & 1) == 1 && ((i >> p2) & 1) == 1)
+                if (((i >> j) & 1) == 1) // If the corner is active
                 {
-                    edges.Add(p1);
-                    edges.Add(p2);
+                    for (int k = 0; k < Edges.Length; k++) // add concerned edges
+                    {
+                        int[] edge = Edges[k];
+                        if (edge[0] == j || edge[1] == j)
+                        {
+                            edges.Add(edge[0]);
+                            edges.Add(edge[1]);
+                        }
+                    }
                 }
             }
 
@@ -76,20 +79,9 @@ public class OctantVisualizer : MonoBehaviour
         {
             var edges = edgeTable[i];
             var edgesList = new List<int>(edges.Length);
-            HashSet<int> set = new();
             for (int j = 0; j < edges.Length; j++)
             {
-                set.Add(edges[j]);
-                int listIndex = 0;
-                foreach (var item in set)
-                {
-                    if(item == edges[j])
-                    {
-                        break;
-                    }
-                    listIndex++;
-                }
-                edgesList.Add(listIndex);                
+                edgesList.Add(edges[j]);
             }
             if (edges != null && edges.Length > 0)
             {
@@ -141,23 +133,13 @@ public class OctantVisualizer : MonoBehaviour
         }
 
         // Draw the corners
-        List<Vector3> activeOs = new();
         for (int i = 0; i < UnitCorners.Length; i++)
         {
             bool isActive = ((bitmapIndex >> i) & 1) == 1;
             Gizmos.color = isActive ? Color.green : Color.red;
             Vector3 position = new Vector3(UnitCorners[i].x, UnitCorners[i].y, UnitCorners[i].z);
-            if (isActive) activeOs.Add(position);
-
             Gizmos.DrawSphere(position, 0.05f);
             UnityEditor.Handles.Label(position + Camera.current.transform.right * 0.1f, i.ToString());
-
-        }
-
-        Gizmos.color = Color.blue;
-        for (int i = 0; i < activeOs.Count; i++)
-        {
-            UnityEditor.Handles.Label(activeOs[i] + Camera.current.transform.right * -0.1f, i.ToString());
         }
     }
 }
