@@ -23,7 +23,7 @@ public class NextBitTest : MonoBehaviour
         }
         for (int i = 0, index = 0; i < count; i++)
         {
-            SparseOctree.FindNext1(map, ref index, out var nextBitIndex);
+            SparseOctree.FindNext1Bit(map, ref index, out var nextBitIndex);
             indices.Add(nextBitIndex);
             index = nextBitIndex + 1;
         }

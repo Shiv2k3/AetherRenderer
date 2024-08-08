@@ -20,6 +20,12 @@ namespace Core.Util
             gradient = p / leng;
             return leng - radius;
         }
+        public static double SDSphere(in double3 p, in float radius, out double3 gradient)
+        {
+            double leng = length(p);
+            gradient = p / leng;
+            return leng - radius;
+        }
         public static float SDBoxFrame(float3 p, float3 b, float e)
         {
             p = abs(p) - b;

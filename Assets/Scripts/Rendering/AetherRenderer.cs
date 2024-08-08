@@ -120,7 +120,7 @@ namespace Core.Rendering
 
             void DrawNode(in Node node, in int depth, in float3 position)
             {
-                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes || node.isChunkPtr) && (!voxel || (voxel && math.distance(CameraPosition, position) < SparseOctree.SubnodeLength(depth) * 2)))
+                if (visibleLayers[depth].ShouldDraw && (node.IsLeaf || internalNodes) && (!voxel || (voxel && math.distance(CameraPosition, position) < SparseOctree.SubnodeLength(depth) * 2)))
                 {
                     float3 random = 0;
                     if (randomOffset != 0)
@@ -134,19 +134,15 @@ namespace Core.Rendering
                     float3 cubeSize = Vector3.one * scale;
 
                     Gizmos.color = visibleLayers[depth].color;
-                    if (node.isChunkPtr)
-                    {
-                        Gizmos.DrawCube(pos, cubeSize);
-                        return;
-                    }
+
                     if (visibleLayers[depth].DrawBounds) Gizmos.DrawWireCube(pos, cubeSize);
                     if (visibleLayers[depth].DrawCenter)
                     {
                         if (voxel)
                         {
-                            Gizmos.color = node.data.Density < 0 ? Color.red : Color.green;
-                            Gizmos.DrawLine(pos, pos + node.data.Normal * math.abs(node.data.Density) * lineScale);
-                            Handles.Label(pos + (float3)Camera.current.transform.right * 0.25f, node.data.Density.ToString());
+                            //Gizmos.color = node._dataIndex.Density < 0 ? Color.red : Color.green;
+                            //Gizmos.DrawLine(pos, pos + node._dataIndex.Normal * math.abs(node._dataIndex.Density) * lineScale);
+                            //Handles.Label(pos + (float3)Camera.current.transform.right * 0.25f, node._dataIndex.Density.ToString());
                         }
                         Gizmos.DrawSphere(pos, pointScale);
                     }
@@ -160,14 +156,14 @@ namespace Core.Rendering
                 if (!node.IsLeaf)
                 {
                     int _depth = depth + 1;
-                    for (int child = 0, start = 0; child < node.Count; child++)
+                    for (int child = 0, start = 0; child < node.SubnodeCount; child++)
                     {
-                        SparseOctree.FindNext1(node._map, ref start, out int octantIndex);
+                        SparseOctree.FindNext1Bit(node._map, ref start, out int octantIndex);
                         start = octantIndex + 1;
                         float3 pos = SparseOctree.SubnodePosition(octantIndex, _depth, position);
                         try
                         {
-                            DrawNode(node[child], _depth, pos); 
+                            DrawNode(node.Subnode(child), _depth, pos); 
                         }
                         catch
                         {

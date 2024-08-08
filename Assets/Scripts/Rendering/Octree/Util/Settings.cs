@@ -20,23 +20,14 @@ namespace Core.Util
         [Tooltip("The LOD factor")]
         [Min(0)] public float lodFactor;
 
-        [Tooltip("The subdivision factor")]
-        [Min(0)] public float subdivisionFactor;
+        [Tooltip("The amount of offset added to each octree during sampling")]
+        [Min(0)] public float samplingOffset;
+
+        [Tooltip("The amount of spread to put on the sample offset, lower value makes offset align with octant normal to reduce unifromity on other axies")]
+        [Min(0)] public float sampleSpread;
 
         [Tooltip("The distance required between last and new octree center to trigger an update")]
         [Min(0)] public float updateThreshold;
-
-        [FoldoutGroup("DC Settings")]
-        [Tooltip("Should singular edges be used for feature poitns")]
-        public bool addSingleEdges;
-
-        [Tooltip("Should singular edges with same sign on both end be added in QEF")]
-        [FoldoutGroup("DC Settings")]
-        public bool addSameSignedEdges;
-
-        [Tooltip("Should singular edges with same sign on both end be added in QEF")]
-        [FoldoutGroup("DC Settings")]
-        public int pointsRequiredForQEF;
 
         [Tooltip("The total number of nodes in the pool")]
         [ReadOnly] public int nodesUsed;

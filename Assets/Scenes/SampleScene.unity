@@ -131,7 +131,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1325623663}
-  - component: {fileID: 1325623662}
+  - component: {fileID: 1325623664}
   m_Layer: 0
   m_Name: GameObject
   m_TagString: Untagged
@@ -139,19 +139,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1325623662
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1325623661}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 64d2f3a1cf2a7cb4a9dbe9b92e7ff204, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bitmapIndex: 255
 --- !u!4 &1325623663
 Transform:
   m_ObjectHideFlags: 0
@@ -167,6 +154,26 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1325623664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1325623661}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f0686ef03f5612c4195948e09581c417, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  position:
+    x: 0
+    y: 0
+    z: 0
+  sampleSpread: 1
+  samplingOffset: 1
+  depth: 0
+  radius: 51.94
 --- !u!1 &1632227326
 GameObject:
   m_ObjectHideFlags: 0
@@ -197,14 +204,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   world:
-    poolDepth: 7
+    poolDepth: 6
     sphereRadius: 4090
-    lodFactor: 4
-    subdivisionFactor: 1
+    lodFactor: 5
+    samplingOffset: 0.5
+    sampleSpread: 2
     updateThreshold: 16
-    addSingleEdges: 1
-    addSameSignedEdges: 1
-    pointsRequiredForQEF: 2
     nodesUsed: 0
     octreeCenter:
       x: 0
@@ -218,38 +223,38 @@ MonoBehaviour:
   lodValue: 0
   voxel: 0
   vertices: 0
-  faces: 0
+  faces: 1
   nodeScale: 1
   randomOffset: 0
   pointScale: 1
   lineScale: 10
   visibleLayers:
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 1, g: 0, b: 0, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.43544197, g: 0, b: 1, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 0.25945473, b: 1, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.78526473, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 0.20754719, b: 0.11313357, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0, g: 1, b: 0.024693727, a: 1}
-  - DrawBounds: 0
+  - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.81947374, g: 1, b: 0, a: 1}
   - DrawBounds: 1
     DrawCenter: 0
     color: {r: 0.49056602, g: 0.43669996, b: 0, a: 1}
-  - DrawBounds: 0
-    DrawCenter: 1
+  - DrawBounds: 1
+    DrawCenter: 0
     color: {r: 0.3301887, g: 0, b: 0.111357786, a: 1}
 --- !u!4 &1632227328
 Transform:
